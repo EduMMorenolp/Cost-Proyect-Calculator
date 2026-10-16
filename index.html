@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Calculadora web interactiva de costos de desarrollo de software." />
+  <meta name="description" content="Calculadora web interactiva y configurable de costos de desarrollo de software (por tarifas o por costos)." />
   <title>Calculadora de Costos de Software</title>
 
   <!-- Tailwind CSS (CDN, sin build) -->
@@ -27,23 +27,20 @@
     };
   </script>
 
-  <!-- Estilos propios -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased">
 
   <!-- ===================== HEADER ===================== -->
-  <header class="app-header">
+  <header class="app-header no-print">
     <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-3">
         <div class="logo-badge" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="4" y="2" width="16" height="20" rx="2"></rect>
             <line x1="8" y1="6" x2="16" y2="6"></line>
-            <line x1="8" y1="10" x2="8" y2="10"></line>
-            <line x1="12" y1="10" x2="16" y2="10"></line>
-            <line x1="8" y1="14" x2="8" y2="14"></line>
-            <line x1="12" y1="14" x2="16" y2="14"></line>
+            <line x1="8" y1="10" x2="12" y2="10"></line>
+            <line x1="8" y1="14" x2="16" y2="14"></line>
             <line x1="8" y1="18" x2="16" y2="18"></line>
           </svg>
         </div>
@@ -68,6 +65,28 @@
     </div>
   </header>
 
+  <!-- ===================== TOOLBAR ===================== -->
+  <div class="app-toolbar no-print" role="toolbar" aria-label="Acciones">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-wrap items-center gap-2">
+      <button id="btn-params" class="btn btn--tool" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span data-i18n="btnParams">Parámetros</span>
+      </button>
+      <button id="btn-scenarios" class="btn btn--tool" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"></path><rect x="7" y="10" width="3" height="7"></rect><rect x="12" y="6" width="3" height="11"></rect><rect x="17" y="13" width="3" height="4"></rect></svg>
+        <span data-i18n="btnScenarios">Escenarios</span>
+      </button>
+      <button id="btn-print" class="btn btn--tool" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        <span data-i18n="btnPrint">Imprimir / PDF</span>
+      </button>
+      <button id="btn-csv" class="btn btn--tool" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span data-i18n="btnCsv">Exportar CSV</span>
+      </button>
+    </div>
+  </div>
+
   <!-- ===================== MAIN ===================== -->
   <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -75,283 +94,192 @@
       <!-- ---------- FORMULARIO ---------- -->
       <form id="calc-form" class="lg:col-span-6 xl:col-span-5 space-y-5" novalidate>
 
-        <!-- Equipo -->
-        <section class="card">
-          <h2 class="card-title" data-i18n="secTeam">Equipo y Experiencia</h2>
+        <div id="warnings" class="warnings no-print" hidden role="status" aria-live="polite"></div>
 
-          <div class="field">
-            <label class="field-label" for="region" data-i18n="region">Ubicación geográfica del equipo</label>
-            <select id="region" class="input"></select>
+        <!-- Selector de modo -->
+        <div class="mode-selector no-print" role="group" aria-label="Modo de cálculo">
+          <span class="mode-selector-label" data-i18n="modeLabel">Modo de cálculo</span>
+          <div class="mode-switch mode-switch--lg">
+            <button type="button" class="mode-opt is-active" data-mode="market" data-i18n="modeMarket">Por tarifas (mercado)</button>
+            <button type="button" class="mode-opt" data-mode="cost" data-i18n="modeCost">Por costos (costo + margen)</button>
           </div>
+        </div>
 
-          <div class="field">
-            <span class="field-label" data-i18n="teamComposition">Composición del equipo (n.º de desarrolladores)</span>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div class="mini-field">
-                <label for="devs-junior" data-i18n="devsJunior">Junior (0–2 años)</label>
-                <input id="devs-junior" class="input" type="number" min="0" step="1" value="1" />
-              </div>
-              <div class="mini-field">
-                <label for="devs-mid" data-i18n="devsMid">Mid-level (2–5 años)</label>
-                <input id="devs-mid" class="input" type="number" min="0" step="1" value="1" />
-              </div>
-              <div class="mini-field">
-                <label for="devs-senior" data-i18n="devsSenior">Senior (&gt;5 años)</label>
-                <input id="devs-senior" class="input" type="number" min="0" step="1" value="1" />
+        <!-- ===== PANEL: MODO TARIFAS ===== -->
+        <div id="market-panel" class="space-y-5">
+          <section class="card">
+            <h2 class="card-title" data-i18n="secTeam">Equipo y Experiencia</h2>
+            <div class="field">
+              <label class="field-label" for="region" data-i18n="region">Ubicación geográfica del equipo</label>
+              <select id="region" class="input"></select>
+            </div>
+            <div class="field">
+              <span class="field-label" data-i18n="teamComposition">Composición del equipo (n.º de desarrolladores)</span>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="mini-field"><label for="devs-junior" data-i18n="devsJunior">Junior (0–2 años)</label><input id="devs-junior" class="input" type="number" min="0" step="1" value="1" /></div>
+                <div class="mini-field"><label for="devs-mid" data-i18n="devsMid">Mid-level (2–5 años)</label><input id="devs-mid" class="input" type="number" min="0" step="1" value="1" /></div>
+                <div class="mini-field"><label for="devs-senior" data-i18n="devsSenior">Senior (&gt;5 años)</label><input id="devs-senior" class="input" type="number" min="0" step="1" value="1" /></div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Complejidad -->
-        <section class="card">
-          <h2 class="card-title" data-i18n="secComplexity">Complejidad del Proyecto</h2>
-          <div class="space-y-2" id="complexity-group" role="radiogroup" aria-label="Complejidad">
-            <label class="option-row">
-              <input type="radio" name="complexity" value="small" class="radio" checked />
-              <span class="option-text" data-i18n="compSmall">Pequeño / Básico ($5.000 – $50.000)</span>
-            </label>
-            <label class="option-row">
-              <input type="radio" name="complexity" value="medium" class="radio" />
-              <span class="option-text" data-i18n="compMedium">Mediano / Empresarial ($50.000 – $150.000)</span>
-            </label>
-            <label class="option-row">
-              <input type="radio" name="complexity" value="large" class="radio" />
-              <span class="option-text" data-i18n="compLarge">Grande / ERP Complejo ($100.000+)</span>
-            </label>
-          </div>
-        </section>
+          <section class="card">
+            <h2 class="card-title" data-i18n="secComplexity">Complejidad del Proyecto</h2>
+            <div class="space-y-2" role="radiogroup" aria-label="Complejidad">
+              <label class="option-row"><input type="radio" name="complexity" value="small" class="radio" checked /><span class="option-text" data-i18n="compSmall">Pequeño / Básico</span></label>
+              <label class="option-row"><input type="radio" name="complexity" value="medium" class="radio" /><span class="option-text" data-i18n="compMedium">Mediano / Empresarial</span></label>
+              <label class="option-row"><input type="radio" name="complexity" value="large" class="radio" /><span class="option-text" data-i18n="compLarge">Grande / ERP Complejo</span></label>
+            </div>
+          </section>
 
-        <!-- Plataformas SO -->
-        <section class="card">
-          <h2 class="card-title" data-i18n="secPlatforms">Cobertura de Sistemas Operativos</h2>
-          <p class="card-hint" data-i18n="platformsHint">Cada plataforma adicional suma +10% de complejidad (tope +30%).</p>
-          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3" id="platforms-group">
-            <label class="option-row option-row--compact">
-              <input type="checkbox" class="checkbox platform" value="windows" checked />
-              <span class="option-text">Windows</span>
-            </label>
-            <label class="option-row option-row--compact">
-              <input type="checkbox" class="checkbox platform" value="macos" />
-              <span class="option-text">Mac OS</span>
-            </label>
-            <label class="option-row option-row--compact">
-              <input type="checkbox" class="checkbox platform" value="linux" />
-              <span class="option-text">Linux</span>
-            </label>
-            <label class="option-row option-row--compact">
-              <input type="checkbox" class="checkbox platform" value="ios" />
-              <span class="option-text">iOS</span>
-            </label>
-            <label class="option-row option-row--compact">
-              <input type="checkbox" class="checkbox platform" value="android" />
-              <span class="option-text">Android</span>
-            </label>
-          </div>
-        </section>
+          <section class="card">
+            <h2 class="card-title" data-i18n="secPlatforms">Cobertura de Sistemas Operativos</h2>
+            <p class="card-hint" data-i18n="platformsHint">Cada plataforma adicional suma un recargo.</p>
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <label class="option-row option-row--compact"><input type="checkbox" class="checkbox platform" value="windows" checked /><span class="option-text">Windows</span></label>
+              <label class="option-row option-row--compact"><input type="checkbox" class="checkbox platform" value="macos" /><span class="option-text">Mac OS</span></label>
+              <label class="option-row option-row--compact"><input type="checkbox" class="checkbox platform" value="linux" /><span class="option-text">Linux</span></label>
+              <label class="option-row option-row--compact"><input type="checkbox" class="checkbox platform" value="ios" /><span class="option-text">iOS</span></label>
+              <label class="option-row option-row--compact"><input type="checkbox" class="checkbox platform" value="android" /><span class="option-text">Android</span></label>
+            </div>
+          </section>
 
-        <!-- Funciones adicionales -->
-        <section class="card">
-          <h2 class="card-title" data-i18n="secExtras">Funciones Adicionales</h2>
-          <p class="card-hint" data-i18n="extrasHint">Marcá las funciones e ingresá su costo estimado en USD.</p>
-          <div class="space-y-2">
-            <div class="cost-row">
-              <label class="option-row option-row--plain">
-                <input type="checkbox" class="checkbox extra" data-key="auth" checked />
-                <span class="option-text" data-i18n="extraAuth">Sistema de Autenticación</span>
-              </label>
-              <div class="cost-input">
-                <span class="currency-sign">$</span>
-                <input type="number" min="0" step="100" class="extra-cost" data-key="auth" value="4000" aria-label="Costo Autenticación" />
+          <section class="card">
+            <div class="card-head">
+              <h2 class="card-title card-title--flush" data-i18n="secExtras">Funciones Adicionales</h2>
+              <div class="mode-switch" role="group" aria-label="Modo de costo">
+                <button type="button" class="mode-btn is-active" data-mode="usd" data-i18n="modeUsd">USD fijo</button>
+                <button type="button" class="mode-btn" data-mode="pct" data-i18n="modePct">% del desarrollo</button>
               </div>
             </div>
-            <div class="cost-row">
-              <label class="option-row option-row--plain">
-                <input type="checkbox" class="checkbox extra" data-key="analytics" checked />
-                <span class="option-text" data-i18n="extraAnalytics">Herramientas de Análisis de Datos</span>
-              </label>
-              <div class="cost-input">
-                <span class="currency-sign">$</span>
-                <input type="number" min="0" step="100" class="extra-cost" data-key="analytics" value="6000" aria-label="Costo Analítica" />
-              </div>
+            <p class="card-hint" data-i18n="extrasHint">Marcá las funciones y definí su costo.</p>
+            <div class="space-y-2">
+              <div class="cost-row"><label class="option-row option-row--plain"><input type="checkbox" class="checkbox extra" data-key="auth" checked /><span class="option-text" data-i18n="extraAuth">Autenticación</span></label><div class="cost-input"><span class="cost-sign extra-sign" data-key="auth">$</span><input type="number" min="0" step="1" class="extra-cost" data-key="auth" value="4000" aria-label="Costo Autenticación" /></div></div>
+              <div class="cost-row"><label class="option-row option-row--plain"><input type="checkbox" class="checkbox extra" data-key="analytics" checked /><span class="option-text" data-i18n="extraAnalytics">Analítica de Datos</span></label><div class="cost-input"><span class="cost-sign extra-sign" data-key="analytics">$</span><input type="number" min="0" step="1" class="extra-cost" data-key="analytics" value="6000" aria-label="Costo Analítica" /></div></div>
+              <div class="cost-row"><label class="option-row option-row--plain"><input type="checkbox" class="checkbox extra" data-key="security" /><span class="option-text" data-i18n="extraSecurity">Seguridad Avanzada</span></label><div class="cost-input"><span class="cost-sign extra-sign" data-key="security">$</span><input type="number" min="0" step="1" class="extra-cost" data-key="security" value="7000" aria-label="Costo Seguridad" /></div></div>
+              <div class="cost-row"><label class="option-row option-row--plain"><input type="checkbox" class="checkbox extra" data-key="docs" /><span class="option-text" data-i18n="extraDocs">Documentación y Manuales</span></label><div class="cost-input"><span class="cost-sign extra-sign" data-key="docs">$</span><input type="number" min="0" step="1" class="extra-cost" data-key="docs" value="2500" aria-label="Costo Documentación" /></div></div>
             </div>
-            <div class="cost-row">
-              <label class="option-row option-row--plain">
-                <input type="checkbox" class="checkbox extra" data-key="security" />
-                <span class="option-text" data-i18n="extraSecurity">Seguridad Avanzada</span>
-              </label>
-              <div class="cost-input">
-                <span class="currency-sign">$</span>
-                <input type="number" min="0" step="100" class="extra-cost" data-key="security" value="7000" aria-label="Costo Seguridad" />
-              </div>
-            </div>
-            <div class="cost-row">
-              <label class="option-row option-row--plain">
-                <input type="checkbox" class="checkbox extra" data-key="docs" />
-                <span class="option-text" data-i18n="extraDocs">Documentación y Manuales</span>
-              </label>
-              <div class="cost-input">
-                <span class="currency-sign">$</span>
-                <input type="number" min="0" step="100" class="extra-cost" data-key="docs" value="2500" aria-label="Costo Documentación" />
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Fases -->
-        <section class="card">
-          <h2 class="card-title" data-i18n="secPhases">Distribución por Fases</h2>
-          <p class="card-hint" data-i18n="phasesHint">Ajustá el esfuerzo (%) entre fases. Debe sumar 100%.</p>
-          <div class="space-y-3">
-            <div class="phase-row">
-              <span class="phase-name" data-i18n="phaseAnalysis">Análisis</span>
-              <input type="range" min="0" max="100" step="5" value="15" class="range phase" data-key="analysis" aria-label="Análisis %" />
-              <span class="phase-value" data-phase-value="analysis">15%</span>
+          <section class="card">
+            <h2 class="card-title" data-i18n="secPhases">Distribución por Fases</h2>
+            <p class="card-hint" data-i18n="phasesHint">Ajustá el esfuerzo (%) entre fases. Debe sumar 100%.</p>
+            <div class="space-y-3">
+              <div class="phase-row"><span class="phase-name" data-i18n="phaseAnalysis">Análisis</span><input type="range" min="0" max="100" step="5" value="15" class="range phase" data-key="analysis" aria-label="Análisis %" /><span class="phase-value" data-phase-value="analysis">15%</span></div>
+              <div class="phase-row"><span class="phase-name" data-i18n="phaseDesign">Diseño</span><input type="range" min="0" max="100" step="5" value="20" class="range phase" data-key="design" aria-label="Diseño %" /><span class="phase-value" data-phase-value="design">20%</span></div>
+              <div class="phase-row"><span class="phase-name" data-i18n="phaseImplementation">Implementación</span><input type="range" min="0" max="100" step="5" value="45" class="range phase" data-key="implementation" aria-label="Implementación %" /><span class="phase-value" data-phase-value="implementation">45%</span></div>
+              <div class="phase-row"><span class="phase-name" data-i18n="phaseTesting">Pruebas</span><input type="range" min="0" max="100" step="5" value="20" class="range phase" data-key="testing" aria-label="Pruebas %" /><span class="phase-value" data-phase-value="testing">20%</span></div>
             </div>
-            <div class="phase-row">
-              <span class="phase-name" data-i18n="phaseDesign">Diseño</span>
-              <input type="range" min="0" max="100" step="5" value="20" class="range phase" data-key="design" aria-label="Diseño %" />
-              <span class="phase-value" data-phase-value="design">20%</span>
-            </div>
-            <div class="phase-row">
-              <span class="phase-name" data-i18n="phaseImplementation">Implementación</span>
-              <input type="range" min="0" max="100" step="5" value="45" class="range phase" data-key="implementation" aria-label="Implementación %" />
-              <span class="phase-value" data-phase-value="implementation">45%</span>
-            </div>
-            <div class="phase-row">
-              <span class="phase-name" data-i18n="phaseTesting">Pruebas</span>
-              <input type="range" min="0" max="100" step="5" value="20" class="range phase" data-key="testing" aria-label="Pruebas %" />
-              <span class="phase-value" data-phase-value="testing">20%</span>
-            </div>
-          </div>
-          <div class="phase-total" id="phase-total">
-            <span data-i18n="phaseTotal">Total</span>:
-            <strong id="phase-total-value">100%</strong>
-            <span id="phase-warning" class="phase-warning" data-i18n="phaseWarning">La suma no es 100%; se normaliza para el cálculo.</span>
-          </div>
-        </section>
+            <div class="phase-total"><span data-i18n="phaseTotal">Total</span>: <strong id="phase-total-value">100%</strong><span id="phase-warning" class="phase-warning" data-i18n="phaseWarning">La suma no es 100%.</span></div>
+          </section>
 
-        <!-- Servicios posteriores -->
-        <section class="card">
-          <h2 class="card-title" data-i18n="secPost">Servicios Posteriores y Mantenimiento</h2>
-          <p class="card-hint" data-i18n="postHint">Servicios post-venta (costo estimado en USD).</p>
-          <div class="space-y-2">
-            <div class="cost-row">
-              <label class="option-row option-row--plain">
-                <input type="checkbox" class="checkbox post" data-key="maintenance" checked />
-                <span class="option-text" data-i18n="postMaintenance">Mantenimiento y Actualizaciones</span>
-              </label>
-              <div class="cost-input">
-                <span class="currency-sign">$</span>
-                <input type="number" min="0" step="100" class="post-cost" data-key="maintenance" value="8000" aria-label="Costo Mantenimiento" />
-              </div>
+          <section class="card">
+            <h2 class="card-title" data-i18n="secPost">Servicios Posteriores y Mantenimiento</h2>
+            <div class="space-y-2">
+              <div class="cost-row"><label class="option-row option-row--plain"><input type="checkbox" class="checkbox post" data-key="maintenance" checked /><span class="option-text" data-i18n="postMaintenance">Mantenimiento y Actualizaciones</span></label><div class="cost-input"><span class="cost-sign post-sign" data-key="maintenance">$</span><input type="number" min="0" step="1" class="post-cost" data-key="maintenance" value="8000" aria-label="Costo Mantenimiento" /></div></div>
+              <div class="cost-row"><label class="option-row option-row--plain"><input type="checkbox" class="checkbox post" data-key="support" /><span class="option-text" data-i18n="postSupport">Soporte Técnico</span></label><div class="cost-input"><span class="cost-sign post-sign" data-key="support">$</span><input type="number" min="0" step="1" class="post-cost" data-key="support" value="5000" aria-label="Costo Soporte" /></div></div>
+              <div class="cost-row"><label class="option-row option-row--plain"><input type="checkbox" class="checkbox post" data-key="training" /><span class="option-text" data-i18n="postTraining">Capacitación de Usuarios</span></label><div class="cost-input"><span class="cost-sign post-sign" data-key="training">$</span><input type="number" min="0" step="1" class="post-cost" data-key="training" value="3000" aria-label="Costo Capacitación" /></div></div>
             </div>
-            <div class="cost-row">
-              <label class="option-row option-row--plain">
-                <input type="checkbox" class="checkbox post" data-key="support" />
-                <span class="option-text" data-i18n="postSupport">Soporte Técnico</span>
-              </label>
-              <div class="cost-input">
-                <span class="currency-sign">$</span>
-                <input type="number" min="0" step="100" class="post-cost" data-key="support" value="5000" aria-label="Costo Soporte" />
-              </div>
-            </div>
-            <div class="cost-row">
-              <label class="option-row option-row--plain">
-                <input type="checkbox" class="checkbox post" data-key="training" />
-                <span class="option-text" data-i18n="postTraining">Capacitación de Usuarios</span>
-              </label>
-              <div class="cost-input">
-                <span class="currency-sign">$</span>
-                <input type="number" min="0" step="100" class="post-cost" data-key="training" value="3000" aria-label="Costo Capacitación" />
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Contrato -->
-        <section class="card">
-          <h2 class="card-title" data-i18n="secContract">Tipo de Contrato</h2>
-          <div class="field">
-            <select id="contract" class="input">
-              <option value="fixed" data-i18n="contractFixed">Precio Fijo (+15% de contingencia)</option>
-              <option value="hourly" data-i18n="contractHourly">Por Horas / Tiempo y Materiales</option>
-            </select>
-          </div>
-          <p class="footnote" data-i18n="footnote">Los valores de funciones extra y servicios post-venta son editables y no escalan automáticamente con el tamaño del proyecto.</p>
-        </section>
+          <section class="card">
+            <h2 class="card-title" data-i18n="secContract">Tipo de Contrato</h2>
+            <div class="field">
+              <select id="contract" class="input">
+                <option value="fixed" data-i18n="contractFixed">Precio Fijo (+ contingencia)</option>
+                <option value="hourly" data-i18n="contractHourly">Por Horas / Tiempo y Materiales</option>
+              </select>
+            </div>
+            <p class="footnote" data-i18n="footnote">Los valores son editables.</p>
+          </section>
+        </div>
+
+        <!-- ===== PANEL: MODO COSTOS (inyectado por JS) ===== -->
+        <div id="cost-panel" class="space-y-5" hidden>
+          <div id="cost-body"></div>
+        </div>
       </form>
 
       <!-- ---------- DASHBOARD ---------- -->
       <section class="lg:col-span-6 xl:col-span-7 space-y-5">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-bold text-slate-900" data-i18n="dashTitle">Dashboard de Resultados</h2>
-          <span class="badge-live" data-i18n="liveBadge">Cálculo en vivo</span>
+          <span class="badge-live no-print" data-i18n="liveBadge">Cálculo en vivo</span>
         </div>
 
-        <!-- KPIs -->
-        <div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          <div class="kpi kpi--primary">
-            <span class="kpi-label" data-i18n="kpiTotal">Costo Total Estimado</span>
-            <span class="kpi-value" id="kpi-total">$0</span>
-            <span class="kpi-sub" id="kpi-total-sub">—</span>
-          </div>
-          <div class="kpi">
-            <span class="kpi-label" data-i18n="kpiHours">Horas Totales</span>
-            <span class="kpi-value" id="kpi-hours">0 h</span>
-            <span class="kpi-sub" data-i18n="kpiHoursSub">esfuerzo estimado</span>
-          </div>
-          <div class="kpi">
-            <span class="kpi-label" data-i18n="kpiRange">Rango Presupuestario</span>
-            <span class="kpi-value kpi-value--sm" id="kpi-range">$0 – $0</span>
-            <span class="kpi-sub" data-i18n="kpiRangeSub">±20%</span>
-          </div>
-          <div class="kpi">
-            <span class="kpi-label" data-i18n="kpiRate">Tarifa Promedio</span>
-            <span class="kpi-value" id="kpi-rate">$0/h</span>
-            <span class="kpi-sub" id="kpi-rate-sub">—</span>
-          </div>
-        </div>
+        <!-- KPIs (inyectados por JS) -->
+        <div id="kpi-grid" class="grid grid-cols-2 gap-3 xl:grid-cols-4"></div>
 
-        <!-- Gráfico 1: Donut -->
+        <!-- Donut -->
         <div class="card">
-          <h3 class="chart-title" data-i18n="chartBreakdown">Desglose del Presupuesto por Categoría</h3>
-          <div class="chart-box">
-            <canvas id="chart-breakdown" aria-label="Desglose del presupuesto"></canvas>
-          </div>
+          <h3 class="chart-title" id="chart1-title" data-i18n="chartBreakdown">Desglose del Presupuesto por Categoría</h3>
+          <div class="chart-box"><canvas id="chart-breakdown" aria-label="Desglose"></canvas></div>
         </div>
 
         <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
-          <!-- Gráfico 2: Regiones -->
           <div class="card">
-            <h3 class="chart-title" data-i18n="chartRegion">Costo Total según Región Geográfica</h3>
-            <div class="chart-box">
-              <canvas id="chart-region" aria-label="Costo por región"></canvas>
-            </div>
+            <h3 class="chart-title" id="chart2-title" data-i18n="chartRegion">Costo Total según Región Geográfica</h3>
+            <div class="chart-box"><canvas id="chart-region" aria-label="Comparativa 2"></canvas></div>
           </div>
-          <!-- Gráfico 3: Contrato -->
           <div class="card">
-            <h3 class="chart-title" data-i18n="chartContract">Precio Fijo vs. Por Horas</h3>
-            <div class="chart-box">
-              <canvas id="chart-contract" aria-label="Comparativa por tipo de contrato"></canvas>
-            </div>
+            <h3 class="chart-title" id="chart3-title" data-i18n="chartContract">Precio Fijo vs. Por Horas</h3>
+            <div class="chart-box"><canvas id="chart-contract" aria-label="Comparativa 3"></canvas></div>
           </div>
         </div>
 
-        <!-- Desglose numérico -->
         <div class="card">
           <h3 class="chart-title" data-i18n="numericBreakdown">Desglose numérico</h3>
           <div id="numeric-breakdown" class="breakdown-list"></div>
         </div>
+
+        <details class="card trace-card" open>
+          <summary class="trace-summary"><h3 class="chart-title" data-i18n="traceTitle">Cómo se calculó</h3></summary>
+          <p class="card-hint" data-i18n="traceHint">Traza del cálculo con los parámetros actuales.</p>
+          <div id="trace-body" class="trace-list"></div>
+        </details>
       </section>
     </div>
 
     <p class="disclaimer" data-i18n="disclaimer">Estimación referencial. Ajustá los supuestos según tu proyecto.</p>
   </main>
 
-  <!-- Chart.js (CDN) -->
+  <!-- ===================== MODAL PARÁMETROS ===================== -->
+  <div id="params-modal" class="modal-backdrop no-print" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="params-title">
+      <header class="modal-header">
+        <h2 id="params-title" data-i18n="paramsTitle">Parámetros del modelo</h2>
+        <button class="modal-x" data-modal-close aria-label="Cerrar">&times;</button>
+      </header>
+      <div class="modal-body" id="params-body"></div>
+      <footer class="modal-footer">
+        <button id="params-reset" class="btn btn--ghost" type="button" data-i18n="resetDefaults">Restaurar valores</button>
+        <button id="params-export" class="btn btn--ghost" type="button" data-i18n="exportJson">Exportar JSON</button>
+        <label class="btn btn--ghost" for="params-import"><span data-i18n="importJson">Importar JSON</span></label>
+        <input type="file" id="params-import" accept="application/json" hidden />
+        <button id="params-close" class="btn btn--primary" type="button" data-i18n="close">Cerrar</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL ESCENARIOS ===================== -->
+  <div id="scenarios-modal" class="modal-backdrop no-print" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="scenarios-title">
+      <header class="modal-header">
+        <h2 id="scenarios-title" data-i18n="scenariosTitle">Escenarios</h2>
+        <button class="modal-x" data-modal-close aria-label="Cerrar">&times;</button>
+      </header>
+      <div class="modal-body" id="scenarios-body"></div>
+      <footer class="modal-footer">
+        <button id="scenarios-close" class="btn btn--primary" type="button" data-i18n="close">Cerrar</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts (orden importa, sin módulos para soportar file://) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Lógica de la app -->
-  <script src="app.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/model.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
