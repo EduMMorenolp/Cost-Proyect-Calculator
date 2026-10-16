@@ -1,0 +1,348 @@
+/* ============================================================
+   Calculadora de Costos de Software — estilos propios
+   (complementa las utilidades de Tailwind)
+   ============================================================ */
+
+:root {
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-900: #1e3a8a;
+  --slate-900: #0f172a;
+  --slate-800: #1e293b;
+  --ring: rgba(37, 99, 235, 0.35);
+}
+
+html { scroll-behavior: smooth; }
+
+body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+
+/* ---------------- Header ---------------- */
+.app-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1e3a8a 100%);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.25);
+}
+
+.logo-badge {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--brand-600), #3b82f6);
+  color: #fff;
+  flex: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+}
+.logo-badge svg { width: 22px; height: 22px; }
+
+/* ---------------- Selector de idioma ---------------- */
+.lang-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+}
+.lang-selector svg { width: 16px; height: 16px; flex: none; }
+.lang-selector select {
+  background: transparent;
+  color: #fff;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.lang-selector select option { color: #0f172a; }
+
+/* ---------------- Tarjetas ---------------- */
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -18px rgba(15, 23, 42, 0.35);
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  margin-bottom: 0.85rem;
+  padding-left: 0.65rem;
+  border-left: 3px solid var(--brand-600);
+  line-height: 1.2;
+}
+
+.card-hint {
+  font-size: 0.775rem;
+  color: #64748b;
+  margin: -0.35rem 0 0.75rem;
+}
+
+/* ---------------- Campos ---------------- */
+.field { margin-bottom: 1rem; }
+.field:last-child { margin-bottom: 0; }
+
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.4rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--slate-800);
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.input:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--brand-600);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.mini-field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.3rem;
+}
+
+/* ---------------- Filas de opción ---------------- */
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: #f8fafc;
+}
+.option-row:hover { border-color: #bfdbfe; background: #f0f7ff; }
+.option-row--plain { border: none; background: transparent; padding: 0; }
+.option-row--plain:hover { background: transparent; }
+.option-row--compact { padding: 0.5rem 0.6rem; }
+
+.option-text { font-size: 0.85rem; color: #334155; }
+
+.checkbox, .radio {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+  accent-color: var(--brand-600);
+  cursor: pointer;
+}
+
+/* ---------------- Filas de costo (checkbox + monto) ---------------- */
+.cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+.cost-row:has(input[type="checkbox"]:not(:checked)) { opacity: 0.6; }
+
+.cost-input {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  flex: none;
+}
+.currency-sign {
+  padding: 0 6px 0 9px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+.cost-input input {
+  width: 88px;
+  border: none;
+  outline: none;
+  padding: 0.4rem 0.6rem 0.4rem 0;
+  font-size: 0.85rem;
+  text-align: right;
+  color: var(--slate-800);
+  background: transparent;
+}
+.cost-input input:focus { background: #f0f7ff; }
+
+/* ---------------- Fases (sliders) ---------------- */
+.phase-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr 3rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+.phase-name { font-size: 0.82rem; color: #334155; }
+.phase-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-700);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"].range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"].range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--brand-600);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.5);
+  cursor: pointer;
+}
+input[type="range"].range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--brand-600);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.5);
+  cursor: pointer;
+}
+
+.phase-total {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  font-size: 0.82rem;
+  color: #475569;
+}
+.phase-total strong { color: var(--slate-900); font-variant-numeric: tabular-nums; }
+.phase-warning {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: none;
+}
+.phase-warning.is-visible { display: inline-block; }
+
+.footnote {
+  margin-top: 0.85rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* ---------------- KPIs ---------------- */
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.kpi--primary {
+  background: linear-gradient(135deg, var(--brand-600), var(--brand-900));
+  border-color: transparent;
+  color: #fff;
+}
+.kpi-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #64748b; }
+.kpi--primary .kpi-label { color: #bfdbfe; }
+.kpi-value { font-size: 1.4rem; font-weight: 800; line-height: 1.15; color: var(--slate-900); font-variant-numeric: tabular-nums; }
+.kpi-value--sm { font-size: 1.05rem; }
+.kpi--primary .kpi-value { color: #fff; }
+.kpi-sub { font-size: 0.7rem; color: #94a3b8; }
+.kpi--primary .kpi-sub { color: #dbeafe; }
+
+/* ---------------- Gráficos ---------------- */
+.chart-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.75rem;
+}
+.chart-box { position: relative; height: 260px; }
+
+.badge-live {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* ---------------- Desglose numérico ---------------- */
+.breakdown-list { display: flex; flex-direction: column; gap: 0.45rem; }
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 0.83rem;
+}
+.breakdown-item--total {
+  background: #eff6ff;
+  font-weight: 700;
+  color: var(--brand-900);
+}
+.breakdown-label { display: inline-flex; align-items: center; gap: 0.5rem; color: #475569; }
+.breakdown-item--total .breakdown-label { color: var(--brand-900); }
+.breakdown-dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.breakdown-value { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--slate-800); }
+
+/* ---------------- Disclaimer ---------------- */
+.disclaimer {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 640px) {
+  .phase-row { grid-template-columns: 5.5rem 1fr 2.75rem; gap: 0.4rem; }
+  .phase-name { font-size: 0.75rem; }
+  .chart-box { height: 230px; }
+  .kpi-value { font-size: 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}
