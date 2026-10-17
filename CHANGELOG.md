@@ -5,6 +5,23 @@ con el título en negrita, una descripción que se entiende sin abrir el código
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-16
+
+- **Added**: **Método de estimación de esfuerzo configurable**. En el modo tarifas se puede elegir cómo se calculan las horas del proyecto: Clásico (complejidad), Arquetipo + funciones, COCOMO, Puntos de función, Puntos de historia u Horas manuales, con vista previa del esfuerzo resultante. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js, index.html, styles.css. [2026-10-16]
+- **Added**: **Catálogo de arquetipos de proyecto**. Selección de tipos de proyecto con horas base predefinidas (Web simple ≈195 h, MVP ≈260 h, App de negocio ≈390 h, SaaS ≈520 h, E-commerce ≈585 h, Portal ≈650 h, SaaS completo ≈780 h, ERP ≈975 h) u horas propias. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js. [2026-10-16]
+- **Added**: **Catálogo de funcionalidades**. Lista ampliable de funciones (pagos, tiempo real, mapas, notificaciones, admin, reportes, multi-idioma, integraciones, IA, migración de datos) que suman esfuerzo con un factor no lineal configurable. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js. [2026-10-16]
+- **Added**: **Equipo por rol en modo tarifas**. Alterna entre definición por perfil (junior/mid/senior) o por rol (Backend, Frontend, Mobile, QA, PM, DevOps, UX/UI, Analista), mostrando la tarifa por hora resultante según el nivel de cada rol, configurable desde Parámetros. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js, index.html. [2026-10-16]
+- **Added**: **Equipo en costos por meses u horas**. La tabla de roles del modo costos admite trabajar con costo mensual × meses o costo por hora × horas, manteniendo la misma fórmula de subtotal. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js. [2026-10-16]
+- **Changed**: **El modo "Por costos (costo + margen)" es ahora el predeterminado** y aparece primero en el selector de modo. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, index.html. [2026-10-16]
+- **Maintenance**: **Almacenamiento migrado a claves v3**. Las versiones v2 dejaron de leerse para que el nuevo modo predeterminado y los nuevos campos se apliquen sin arrastrar estado viejo. [2026-10-16]
+  * **Files (Archivos)**: js/model.js. [2026-10-16]
+
 ## [1.2.0] - 2026-10-16
 
 - **Added**: **Modo costos (costo + margen)**. Segundo motor de cálculo que estima el costo interno del proyecto (personal por rol, costos variables, costos fijos de la empresa y ajustes) y calcula el precio de venta aplicando un margen de ganancia; incluye selector de modo en el formulario y persiste la elección. [2026-10-16]

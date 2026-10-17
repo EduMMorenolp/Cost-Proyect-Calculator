@@ -100,13 +100,26 @@
         <div class="mode-selector no-print" role="group" aria-label="Modo de cálculo">
           <span class="mode-selector-label" data-i18n="modeLabel">Modo de cálculo</span>
           <div class="mode-switch mode-switch--lg">
-            <button type="button" class="mode-opt is-active" data-mode="market" data-i18n="modeMarket">Por tarifas (mercado)</button>
-            <button type="button" class="mode-opt" data-mode="cost" data-i18n="modeCost">Por costos (costo + margen)</button>
+            <button type="button" class="mode-opt is-active" data-mode="cost" data-i18n="modeCost">Por costos (costo + margen)</button>
+            <button type="button" class="mode-opt" data-mode="market" data-i18n="modeMarket">Por tarifas (mercado)</button>
           </div>
         </div>
 
         <!-- ===== PANEL: MODO TARIFAS ===== -->
-        <div id="market-panel" class="space-y-5">
+        <div id="market-panel" class="space-y-5" hidden>
+
+          <!-- Estimación de esfuerzo [Fase A/C] -->
+          <section class="card">
+            <h2 class="card-title" data-i18n="secEffort">Estimación de Esfuerzo</h2>
+            <div class="field">
+              <label class="field-label" for="effort-method" data-i18n="effortLabel">Método de estimación</label>
+              <select id="effort-method" class="input"></select>
+            </div>
+            <p class="card-hint" data-i18n="effortHint">Elegí cómo se calculan las horas del proyecto.</p>
+            <div id="effort-body"></div>
+          </section>
+
+          <!-- Equipo [Fase A] -->
           <section class="card">
             <h2 class="card-title" data-i18n="secTeam">Equipo y Experiencia</h2>
             <div class="field">
@@ -114,6 +127,13 @@
               <select id="region" class="input"></select>
             </div>
             <div class="field">
+              <span class="field-label" data-i18n="teamModeLabel">Forma de definir el equipo</span>
+              <div class="mode-switch" role="group" aria-label="Equipo">
+                <button type="button" class="team-opt is-active" data-team="profile" data-i18n="teamProfile">Por perfil</button>
+                <button type="button" class="team-opt" data-team="role" data-i18n="teamRole">Por rol</button>
+              </div>
+            </div>
+            <div id="team-profile">
               <span class="field-label" data-i18n="teamComposition">Composición del equipo (n.º de desarrolladores)</span>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div class="mini-field"><label for="devs-junior" data-i18n="devsJunior">Junior (0–2 años)</label><input id="devs-junior" class="input" type="number" min="0" step="1" value="1" /></div>
@@ -121,14 +141,15 @@
                 <div class="mini-field"><label for="devs-senior" data-i18n="devsSenior">Senior (&gt;5 años)</label><input id="devs-senior" class="input" type="number" min="0" step="1" value="1" /></div>
               </div>
             </div>
-          </section>
-
-          <section class="card">
-            <h2 class="card-title" data-i18n="secComplexity">Complejidad del Proyecto</h2>
-            <div class="space-y-2" role="radiogroup" aria-label="Complejidad">
-              <label class="option-row"><input type="radio" name="complexity" value="small" class="radio" checked /><span class="option-text" data-i18n="compSmall">Pequeño / Básico</span></label>
-              <label class="option-row"><input type="radio" name="complexity" value="medium" class="radio" /><span class="option-text" data-i18n="compMedium">Mediano / Empresarial</span></label>
-              <label class="option-row"><input type="radio" name="complexity" value="large" class="radio" /><span class="option-text" data-i18n="compLarge">Grande / ERP Complejo</span></label>
+            <div id="team-role" hidden>
+              <div class="table-scroll">
+                <table class="param-table cost-table">
+                  <thead><tr>
+                    <th data-i18n="colRole">Rol</th><th data-i18n="colCount">Cant.</th><th data-i18n="colLevel">Nivel</th><th data-i18n="colRateHour">Tarifa/h</th>
+                  </tr></thead>
+                  <tbody id="market-team-body"></tbody>
+                </table>
+              </div>
             </div>
           </section>
 

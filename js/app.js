@@ -28,6 +28,13 @@ var CSC = (window.CSC = window.CSC || {});
   const EXTRA_KEYS = ["auth", "analytics", "security", "docs"];
   const POST_KEYS = ["maintenance", "support", "training"];
   const PHASE_KEYS = ["analysis", "design", "implementation", "testing"];
+  const EFFORT_METHODS = ["complexity", "catalog", "cocomo", "fp", "sp", "manual"];
+  const GSC_KEYS = [
+    "gscDataComms", "gscDistributed", "gscPerformance", "gscHeavyConfig", "gscTransactionRate",
+    "gscOnlineData", "gscEfficiency", "gscOnlineUpdate", "gscComplex", "gscReusability",
+    "gscInstallEase", "gscOperational", "gscMultipleSites", "gscFacilitateChange"
+  ];
+  const MARKET_ROLE_LEVELS = ["junior", "mid", "senior"];
 
   const mode = () => (state.mode === "cost" ? "cost" : "market");
 
@@ -39,6 +46,7 @@ var CSC = (window.CSC = window.CSC || {});
       "contract", "phase-total-value", "phase-warning", "warnings",
       "kpi-grid", "numeric-breakdown", "trace-body",
       "market-panel", "cost-panel", "cost-body",
+      "effort-method", "effort-body", "team-profile", "team-role", "market-team-body",
       "chart1-title", "chart2-title", "chart3-title",
       "params-modal", "params-body", "params-reset", "params-export", "params-import", "params-close",
       "scenarios-modal", "scenarios-body", "scenarios-close",
@@ -68,6 +76,178 @@ var CSC = (window.CSC = window.CSC || {});
     persist();
     renderModeUI();
     recompute();
+  }
+
+  /* ---------------- Estimación de esfuerzo [Fase A/C] ---------------- */
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  function renderEffortOptions() {
+    if (!dom["effort-method"]) return;
+    dom["effort-method"].innerHTML = EFFORT_METHODS
+      .map((m) => `<option value="${m}">${t("effort" + cap(m))}</option>`)
+      .join("");
+    dom["effort-method"].value = state.effortMethod || "complexity";
+  }
+
+  function effortPreviewHtml() {
+    const eff = M.computeEffort(state, params);
+    const d = eff.detail || {};
+    const extra = [];
+    if (eff.method === "catalog") extra.push(`${t("catalogBase")}: ${fmtNum(d.base)} ${t("unitHours")}`);
+    if (eff.method === "cocomo") extra.push(`${t("cocomoEffort")}: ${(d.pm || 0).toFixed(1)} PM · ${t("cocomoEaf")}: ${(d.eaf || 1).toFixed(2)}`);
+    if (eff.method === "fp") extra.push(`${t("fpUfp")}: ${fmtNum(d.ufp)} · ${t("fpVaf")}: ${(d.vaf || 0).toFixed(2)} · ${t("fpAfp")}: ${fmtNum(d.afp)}`);
+    if (eff.method === "sp") extra.push(`${t("spSprints")}: ${(d.sprints || 0).toFixed(1)}`);
+    return `<div id="effort-preview" class="effort-preview"><strong>${fmtNum(eff.hours)} ${t("unitHours")}</strong>${extra.length ? " · " + extra.join(" · ") : ""}</div>`;
+  }
+
+  function updateEffortPreview() {
+    const el = document.getElementById("effort-preview");
+    if (!el) return;
+    const wrap = document.createElement("div");
+    wrap.innerHTML = effortPreviewHtml();
+    el.replaceWith(wrap.firstElementChild);
+  }
+
+  function renderEffortPanel() {
+    const body = dom["effort-body"];
+    if (!body) return;
+    const m = state.effortMethod || "complexity";
+    let html = "";
+
+    if (m === "complexity") {
+      html = `<div class="space-y-2" role="radiogroup" aria-label="${t("secComplexity")}">
+        ${["small", "medium", "large"].map((k) => `<label class="option-row"><input type="radio" name="complexity" value="${k}" class="radio" data-effort="complexity" ${state.complexity === k ? "checked" : ""} /><span class="option-text">${t("comp" + cap(k))}</span></label>`).join("")}
+      </div>${effortPreviewHtml()}`;
+    } else if (m === "catalog") {
+      const c = state.catalog;
+      const archOpts = (params.archetypes || [])
+        .map((a) => `<option value="${a.key}" ${!c.useCustom && c.archetypeKey === a.key ? "selected" : ""}>${t("arch" + cap(a.key))}</option>`)
+        .join("");
+      const feats = (params.catalogFeatures || [])
+        .map((f) => `<label class="option-row option-row--compact feature-item"><input type="checkbox" class="checkbox" data-effort="catalog.features.${f.key}" ${c.features[f.key] ? "checked" : ""} /><span class="option-text">${t("feat" + cap(f.key))}</span><span class="feat-hours">+${f.hours} ${t("unitHours")}</span></label>`)
+        .join("");
+      html = `
+        <div class="field">
+          <label class="field-label">${t("archetypeLabel")}</label>
+          <select class="input" data-effort="archetype">
+            ${archOpts}
+            <option value="custom" ${c.useCustom ? "selected" : ""}>${t("archCustom")}</option>
+          </select>
+        </div>
+        ${c.useCustom ? `<div class="param-field" style="max-width:220px"><label>${t("customHoursLabel")}</label><input class="input" type="number" min="0" data-effort="catalog.customHours" value="${c.customHours}"></div>` : ""}
+        <span class="field-label">${t("catalogFeaturesLabel")}</span>
+        <div class="feature-grid">${feats}</div>
+        ${effortPreviewHtml()}`;
+    } else if (m === "cocomo") {
+      const co = state.cocomo;
+      const driverRows = M.COCOMO_DRIVER_KEYS.map((k) => {
+        const opts = ["veryLow", "low", "nominal", "high", "veryHigh"]
+          .map((lv) => `<option value="${lv}" ${co.drivers[k] === lv ? "selected" : ""}>${t("lvl" + cap(lv))}</option>`)
+          .join("");
+        return `<div class="param-field"><label>${t("driver" + cap(k))}</label><select class="input input--sm" data-effort="cocomo.drivers.${k}">${opts}</select></div>`;
+      }).join("");
+      html = `
+        <div class="param-grid">
+          <div class="param-field"><label>${t("cocomoKloc")}</label><input class="input input--sm" type="number" min="0" step="0.5" data-effort="cocomo.kloc" value="${co.kloc}"></div>
+          <div class="param-field"><label>${t("cocomoModeLabel")}</label><select class="input input--sm" data-effort="cocomo.mode">
+            <option value="organic" ${co.mode === "organic" ? "selected" : ""}>${t("cocomoOrganic")}</option>
+            <option value="semidetached" ${co.mode === "semidetached" ? "selected" : ""}>${t("cocomoSemi")}</option>
+            <option value="embedded" ${co.mode === "embedded" ? "selected" : ""}>${t("cocomoEmbedded")}</option>
+          </select></div>
+        </div>
+        <h3 class="param-section">${t("cocomoDrivers")}</h3>
+        <div class="param-grid">${driverRows}</div>
+        ${effortPreviewHtml()}`;
+    } else if (m === "fp") {
+      const f = state.fp;
+      const counts = [["ei", "fpEi"], ["eo", "fpEo"], ["eq", "fpEq"], ["ilf", "fpIlf"], ["eif", "fpEif"]]
+        .map(([k, label]) => `<div class="param-field"><label>${t(label)}</label><input class="input input--sm" type="number" min="0" data-effort="fp.${k}" value="${f[k]}"></div>`)
+        .join("");
+      const gsc = GSC_KEYS.map((label, i) => `<div class="phase-row"><span class="phase-name">${t(label)}</span><input type="range" min="0" max="5" step="1" class="range" data-effort="fp.gsc.${i}" value="${f.gsc[i]}" aria-label="${t(label)}" /><span class="phase-value" data-gsc-value="${i}">${f.gsc[i]}</span></div>`).join("");
+      html = `<h3 class="param-section">${t("fpCounts")}</h3>
+        <div class="param-grid">${counts}</div>
+        <h3 class="param-section">${t("fpGsc")}</h3>
+        <div class="space-y-2">${gsc}</div>
+        ${effortPreviewHtml()}`;
+    } else if (m === "sp") {
+      const s = state.sp;
+      html = `<div class="param-grid">
+        <div class="param-field"><label>${t("spPoints")}</label><input class="input input--sm" type="number" min="0" data-effort="sp.points" value="${s.points}"></div>
+        <div class="param-field"><label>${t("spVelocity")}</label><input class="input input--sm" type="number" min="1" data-effort="sp.velocity" value="${s.velocity}"></div>
+        <div class="param-field"><label>${t("spHoursPerSprint")}</label><input class="input input--sm" type="number" min="0" data-effort="sp.hoursPerSprint" value="${s.hoursPerSprint}"></div>
+      </div>${effortPreviewHtml()}`;
+    } else {
+      html = `<div class="param-field" style="max-width:220px"><label>${t("manualHoursLabel")}</label><input class="input" type="number" min="0" data-effort="manual.hours" value="${state.manual.hours}"></div>${effortPreviewHtml()}`;
+    }
+    body.innerHTML = html;
+  }
+
+  function handleEffortInput(target) {
+    const path = target.dataset.effort;
+    if (!path) return;
+    if (path === "archetype") {
+      if (target.value === "custom") {
+        state.catalog.useCustom = true;
+      } else {
+        state.catalog.useCustom = false;
+        state.catalog.archetypeKey = target.value;
+      }
+      renderEffortPanel();
+      return;
+    }
+    let value;
+    if (target.type === "number" || target.type === "range") value = Math.max(0, num(target.value));
+    else if (target.type === "checkbox") value = target.checked;
+    else value = target.value;
+    M.setByPath(state, path, value);
+    if (/^fp\.gsc\./.test(path)) {
+      const out = $(`[data-gsc-value="${path.split(".").pop()}"]`);
+      if (out) out.textContent = value;
+    }
+    updateEffortPreview();
+  }
+
+  /* ---------------- Equipo [Fase A] ---------------- */
+  function renderTeamMode() {
+    const isRole = state.teamMode === "role";
+    if (dom["team-profile"]) dom["team-profile"].hidden = isRole;
+    if (dom["team-role"]) dom["team-role"].hidden = !isRole;
+    $$(".team-opt").forEach((b) => {
+      const active = b.dataset.team === (isRole ? "role" : "profile");
+      b.classList.toggle("is-active", active);
+      b.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderMarketTeam() {
+    if (!dom["market-team-body"]) return;
+    const region = params.regions.find((r) => r.key === state.region) || params.regions[0];
+    dom["market-team-body"].innerHTML = (params.marketRoles || [])
+      .map((r) => {
+        const rate = num(region.rates[r.level], region.rates.mid);
+        return `<tr>
+          <td class="param-region">${t("role" + cap(r.key))}</td>
+          <td><input class="input input--sm" type="number" min="0" data-team-role="${r.key}" value="${state.marketTeam[r.key] || 0}" aria-label="${t("colCount")}"></td>
+          <td>${t("col" + cap(r.level))}</td>
+          <td class="cost-subtotal">${fmtUSD(rate)}${t("unitPerHour")}</td>
+        </tr>`;
+      })
+      .join("");
+  }
+
+  function handleMarketTeamInput(target) {
+    const key = target.dataset.teamRole;
+    if (!key) return;
+    state.marketTeam[key] = Math.max(0, num(target.value));
+  }
+
+  function renderDynamics() {
+    renderModeUI();
+    renderEffortOptions();
+    renderEffortPanel();
+    renderTeamMode();
+    renderMarketTeam();
+    renderCostPanel();
   }
 
   /* ---------------- Bindings: modo tarifas ---------------- */
@@ -132,7 +312,7 @@ var CSC = (window.CSC = window.CSC || {});
       senior: Math.max(0, num(dom["devs-senior"].value))
     };
     const radio = $('input[name="complexity"]:checked');
-    state.complexity = radio ? radio.value : "small";
+    if (radio) state.complexity = radio.value;
     state.platforms = $$(".platform:checked").map((c) => c.value);
     state.contract = dom.contract.value;
     EXTRA_KEYS.forEach((k) => {
@@ -231,12 +411,18 @@ var CSC = (window.CSC = window.CSC || {});
       </section>
 
       <section class="card">
-        <h2 class="card-title" data-i18n="secRoles">${t("secRoles")}</h2>
-        <div class="table-scroll">
+        <div class="card-head">
+          <h2 class="card-title card-title--flush" data-i18n="secRoles">${t("secRoles")}</h2>
+          <select class="input input--sm" data-cost="rolesUnit" aria-label="${t("rolesUnitLabel")}" style="width:auto">
+            <option value="months" ${c.rolesUnit !== "hours" ? "selected" : ""}>${t("rolesUnitMonths")}</option>
+            <option value="hours" ${c.rolesUnit === "hours" ? "selected" : ""}>${t("rolesUnitHours")}</option>
+          </select>
+        </div>
+        <div class="table-scroll" style="margin-top:0.6rem">
           <table class="param-table cost-table">
             <thead><tr>
-              <th>${t("colRole")}</th><th>${t("colQty")}</th><th>${t("colMonthly")}</th>
-              <th>${t("colMonths")}</th><th>${t("colDedication")}</th><th>${t("colSubtotal")}</th><th></th>
+              <th>${t("colRole")}</th><th>${t("colQty")}</th><th>${c.rolesUnit === "hours" ? t("colHourly") : t("colMonthly")}</th>
+              <th>${c.rolesUnit === "hours" ? t("colHours") : t("colMonths")}</th><th>${t("colDedication")}</th><th>${t("colSubtotal")}</th><th></th>
             </tr></thead>
             <tbody>${rolesRows}</tbody>
           </table>
@@ -313,7 +499,7 @@ var CSC = (window.CSC = window.CSC || {});
     if (target.type === "number") value = Math.max(0, num(target.value));
     else value = target.value;
     M.setByPath(state.cost, path, value);
-    if (path === "allocationMethod") {
+    if (path === "allocationMethod" || path === "rolesUnit") {
       renderCostPanel();
     } else {
       updateCostSubtotals();
@@ -442,6 +628,7 @@ var CSC = (window.CSC = window.CSC || {});
         `<div class="trace-step trace-step--total"><span class="trace-idx">Σ</span><span class="trace-label">${t("stepSalePrice")}</span><span class="trace-value">${fmtUSD(costRes.salePrice)}</span></div>`;
     } else {
       const steps = [
+        [t("effortLabel"), t("effort" + cap(marketRes.effortMethod))],
         [t("stepBaseHours"), fmtNum(marketRes.baseHours) + " " + t("unitHours")],
         [t("stepTeamFactor"), "×" + marketRes.teamFactor.toFixed(2) + " (" + marketRes.totalDevs + " dev)"],
         [t("stepTotalHours"), fmtNum(marketRes.totalHours) + " " + t("unitHours")],
@@ -466,9 +653,9 @@ var CSC = (window.CSC = window.CSC || {});
     } else {
       if (M.sumPhase(state.phases) !== 100) list.push(t("warnPhases"));
       if (state.platforms.length === 0) list.push(t("warnNoPlatform"));
-      if (state.devs.junior + state.devs.mid + state.devs.senior === 0) list.push(t("warnNoDevs"));
+      if (state.teamMode !== "role" && state.devs.junior + state.devs.mid + state.devs.senior === 0) list.push(t("warnNoDevs"));
       if (params.regions.some((r) => num(r.min) > num(r.max))) list.push(t("warnRange"));
-      if (!num(params.complexityHours[state.complexity])) list.push(t("warnNoHours"));
+      if (!num(M.computeEffort(state, params).hours)) list.push(t("warnNoHours"));
     }
     dom.warnings.innerHTML = list.map((m) => `<span class="warning-chip">${m}</span>`).join("");
     dom.warnings.hidden = list.length === 0;
@@ -515,7 +702,7 @@ var CSC = (window.CSC = window.CSC || {});
     applyStaticI18n();
     renderRegionOptions();
     renderForm();
-    renderCostPanel();
+    renderDynamics();
     recompute();
     M.saveLang(lang);
   }
@@ -597,6 +784,25 @@ var CSC = (window.CSC = window.CSC || {});
       <h3 class="param-section">${t("secBudget")}</h3>
       <div class="param-grid">
         ${field("budgetRangePct", "budgetRangePct", params.budgetRangePct, "±%")}
+      </div>
+      <h3 class="param-section">${t("secEffortParams")}</h3>
+      <div class="param-grid">
+        ${field("catalogExponentLabel", "catalogExponent", params.catalogExponent, "×")}
+        ${field("hoursPerFP", "hoursPerFP", params.hoursPerFP, t("unitHours"))}
+        ${field("hoursPerPersonMonth", "hoursPerPersonMonth", params.hoursPerPersonMonth, t("unitHours"))}
+        ${field("spHoursPerSprint", "hoursPerSprint", params.hoursPerSprint, t("unitHours"))}
+      </div>
+      <h3 class="param-section">${t("secMarketRolesParams")}</h3>
+      <div class="table-scroll">
+        <table class="param-table">
+          <thead><tr><th>${t("colRole")}</th><th>${t("colLevel")}</th></tr></thead>
+          <tbody>
+            ${(params.marketRoles || []).map((r, i) => `<tr>
+              <td class="param-region">${t("role" + cap(r.key))}</td>
+              <td><select class="input input--sm" data-param="marketRoles.${i}.level">${MARKET_ROLE_LEVELS.map((l) => `<option value="${l}" ${r.level === l ? "selected" : ""}>${t("col" + cap(l))}</option>`).join("")}</select></td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
       </div>`;
   }
 
@@ -608,10 +814,15 @@ var CSC = (window.CSC = window.CSC || {});
   function onParamInput(e) {
     const input = e.target.closest("[data-param]");
     if (!input) return;
-    const value = input.type === "checkbox" ? input.checked : Math.max(0, num(input.value));
+    let value;
+    if (input.type === "checkbox") value = input.checked;
+    else if (input.tagName === "SELECT") value = input.value;
+    else value = Math.max(0, num(input.value));
     M.setByPath(params, input.dataset.param, value);
     persist();
     renderRegionOptions();
+    renderMarketTeam();
+    updateEffortPreview();
     recompute();
   }
 
@@ -622,7 +833,7 @@ var CSC = (window.CSC = window.CSC || {});
     persist();
     renderRegionOptions();
     renderForm();
-    renderCostPanel();
+    renderDynamics();
     recompute();
     dom["params-body"].innerHTML = buildParamsBody();
   }
@@ -656,7 +867,7 @@ var CSC = (window.CSC = window.CSC || {});
         M.saveScenarios(scenarios);
         renderRegionOptions();
         renderForm();
-        renderCostPanel();
+        renderDynamics();
         recompute();
         dom["params-body"].innerHTML = buildParamsBody();
       } catch (err) {
@@ -778,7 +989,7 @@ var CSC = (window.CSC = window.CSC || {});
     renderModeUI();
     renderRegionOptions();
     renderForm();
-    renderCostPanel();
+    renderDynamics();
     recompute();
     closeModal(dom["scenarios-modal"]);
   }
@@ -796,6 +1007,8 @@ var CSC = (window.CSC = window.CSC || {});
 
     function onFormInput(e) {
       if (e.target.closest("#cost-body")) handleCostInput(e.target);
+      else if (e.target.closest("#effort-body")) handleEffortInput(e.target);
+      else if (e.target.closest("#market-team-body")) handleMarketTeamInput(e.target);
       else syncStateFromDom();
       persist();
       recompute();
@@ -808,6 +1021,25 @@ var CSC = (window.CSC = window.CSC || {});
     // Selector de modo (tarifas / costos)
     $$(".mode-opt").forEach((btn) => {
       btn.addEventListener("click", () => setMode(btn.dataset.mode));
+    });
+
+    // Método de estimación de esfuerzo [Fase A]
+    if (dom["effort-method"]) {
+      dom["effort-method"].addEventListener("change", () => {
+        state.effortMethod = dom["effort-method"].value;
+        renderEffortPanel();
+        persist();
+        recompute();
+      });
+    }
+    // Equipo por perfil / rol [Fase A]
+    $$(".team-opt").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.teamMode = btn.dataset.team;
+        renderTeamMode();
+        persist();
+        recompute();
+      });
     });
 
     // Modo de costo de extras (USD / %)
