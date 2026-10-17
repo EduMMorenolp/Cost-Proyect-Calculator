@@ -5,6 +5,11 @@ con el título en negrita, una descripción que se entiende sin abrir el código
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-10-16
+
+- **Fixed**: **La Distribución por Fases no actualizaba su total ni la advertencia**. Al mover los sliders, el porcentaje de cada fase, el "Total" y el aviso de que la suma no da 100% quedaban desincronizados porque solo se escribían al recargar el formulario; el total mostraba siempre el 100% estático del HTML. Ahora se recalculan en vivo en cada cambio. [2026-10-16]
+  * **Files (Archivos)**: js/app.js. [2026-10-16]
+
 ## [1.5.0] - 2026-10-16
 
 - **Added**: **Cronograma estimado**. Duración del proyecto calculada a partir del esfuerzo y el tamaño del equipo (con horas por persona-mes configurables), con hitos acumulados por fase en el modo tarifas y duración por meses en el modo costos. [2026-10-16]

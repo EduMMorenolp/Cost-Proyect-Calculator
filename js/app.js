@@ -789,6 +789,21 @@ var CSC = (window.CSC = window.CSC || {});
     ].join("");
   }
 
+  function updatePhaseUI() {
+    const sum = M.sumPhase(state.phases);
+    PHASE_KEYS.forEach((k) => {
+      const out = $(`[data-phase-value="${k}"]`);
+      if (out) out.textContent = (Number(state.phases[k]) || 0) + "%";
+    });
+    const totalEl = dom["phase-total-value"];
+    if (totalEl) {
+      totalEl.textContent = sum + "%";
+      totalEl.style.color = sum === 100 ? "" : "#b45309";
+    }
+    const warn = dom["phase-warning"];
+    if (warn) warn.classList.toggle("is-visible", sum !== 100);
+  }
+
   function recompute() {
     const marketRes = M.computeForRegion(state, params, state.region);
     const costRes = M.computeCost(state, params);
@@ -798,6 +813,7 @@ var CSC = (window.CSC = window.CSC || {});
     renderTco(mode() === "cost" ? costRes.expected : marketRes.expected);
     renderTrace(marketRes, costRes);
     renderWarnings();
+    updatePhaseUI();
     updateChartTitles();
     CSC.Charts.update({ mode: mode(), t: t, marketRes: marketRes, costRes: costRes, state: state, params: params });
   }
