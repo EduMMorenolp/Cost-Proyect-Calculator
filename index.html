@@ -84,6 +84,18 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         <span data-i18n="btnCsv">Exportar CSV</span>
       </button>
+      <button id="btn-excel" class="btn btn--tool" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><polyline points="14 3 14 8 19 8"></polyline><path d="m9 13 2 3 2-3"></path><path d="m9 18 4-5"></path></svg>
+        <span data-i18n="btnExcel">Exportar Excel</span>
+      </button>
+      <button id="btn-report" class="btn btn--tool" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg>
+        <span data-i18n="btnReport">Reporte / Propuesta</span>
+      </button>
+      <button id="btn-share" class="btn btn--tool" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"></line><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"></line></svg>
+        <span data-i18n="btnShare">Compartir</span>
+      </button>
     </div>
   </div>
 
@@ -278,22 +290,32 @@
         <!-- KPIs (inyectados por JS) -->
         <div id="kpi-grid" class="grid grid-cols-2 gap-3 xl:grid-cols-4"></div>
 
-        <!-- Donut -->
-        <div class="card">
-          <h3 class="chart-title" id="chart1-title" data-i18n="chartBreakdown">Desglose del Presupuesto por Categoría</h3>
-          <div class="chart-box"><canvas id="chart-breakdown" aria-label="Desglose"></canvas></div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
-          <div class="card">
-            <h3 class="chart-title" id="chart2-title" data-i18n="chartRegion">Costo Total según Región Geográfica</h3>
-            <div class="chart-box"><canvas id="chart-region" aria-label="Comparativa 2"></canvas></div>
+        <!-- Bloque de gráficos navegable (siempre 3 gráficos por conjunto) -->
+        <div class="charts-block">
+          <button id="chart-prev" class="chart-nav chart-nav--prev no-print" type="button" aria-label="Conjunto anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div class="charts-pages">
+            <div class="card">
+              <h3 class="chart-title" id="chart1-title">Composición</h3>
+              <div class="chart-box"><canvas id="chart-breakdown" aria-label="Gráfico 1"></canvas></div>
+            </div>
+            <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+              <div class="card">
+                <h3 class="chart-title" id="chart2-title">Gráfico 2</h3>
+                <div class="chart-box"><canvas id="chart-region" aria-label="Gráfico 2"></canvas></div>
+              </div>
+              <div class="card">
+                <h3 class="chart-title" id="chart3-title">Gráfico 3</h3>
+                <div class="chart-box"><canvas id="chart-contract" aria-label="Gráfico 3"></canvas></div>
+              </div>
+            </div>
           </div>
-          <div class="card">
-            <h3 class="chart-title" id="chart3-title" data-i18n="chartContract">Precio Fijo vs. Por Horas</h3>
-            <div class="chart-box"><canvas id="chart-contract" aria-label="Comparativa 3"></canvas></div>
-          </div>
+          <button id="chart-next" class="chart-nav chart-nav--next no-print" type="button" aria-label="Conjunto siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
         </div>
+        <div class="chart-dots no-print" id="chart-dots" role="tablist" aria-label="Conjuntos de gráficos"></div>
 
         <div class="card">
           <h3 class="chart-title" data-i18n="numericBreakdown">Desglose numérico</h3>
@@ -348,6 +370,10 @@
       </header>
       <div class="modal-body" id="scenarios-body"></div>
       <footer class="modal-footer">
+        <button id="scenarios-print" class="btn btn--tool" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          <span data-i18n="scenariosPrint">Imprimir / PDF</span>
+        </button>
         <button id="scenarios-close" class="btn btn--primary" type="button" data-i18n="close">Cerrar</button>
       </footer>
     </div>
@@ -355,6 +381,7 @@
 
   <!-- Scripts (orden importa, sin módulos para soportar file://) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/model.js"></script>
   <script src="js/charts.js"></script>

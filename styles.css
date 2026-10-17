@@ -162,6 +162,29 @@ input[type="range"].range:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
 .chart-box--sm { height: 200px; margin-top: 1rem; }
 .badge-live { font-size: 0.7rem; font-weight: 600; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 999px; }
 
+/* ---------------- Bloque de gráficos navegable ---------------- */
+.charts-block { position: relative; padding: 0 2.5rem; }
+.charts-pages { display: flex; flex-direction: column; gap: 1.25rem; }
+.chart-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 40px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; color: var(--brand-700, #2563eb);
+  border: 1px solid #cbd5e1; box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .15s;
+}
+.chart-nav:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+.chart-nav:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.chart-nav--prev { left: 0; }
+.chart-nav--next { right: 0; }
+.chart-nav svg { width: 20px; height: 20px; }
+.chart-dots { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
+.chart-dot { font-size: 0.72rem; padding: 0.28rem 0.75rem; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.chart-dot:hover { border-color: #2563eb; color: #1e3a8a; }
+.chart-dot.is-active { background: #2563eb; border-color: #2563eb; color: #fff; font-weight: 600; }
+.delta-up { color: #b91c1c; font-weight: 700; }
+.delta-down { color: #15803d; font-weight: 700; }
+
 /* ---------------- Desglose numérico ---------------- */
 .breakdown-list { display: flex; flex-direction: column; gap: 0.45rem; }
 .breakdown-item { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.5rem 0.7rem; border-radius: 10px; background: #f8fafc; font-size: 0.83rem; }
@@ -281,6 +304,9 @@ input[type="range"].range:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
   .phase-row { grid-template-columns: 5.5rem 1fr 2.75rem; gap: 0.4rem; }
   .phase-name { font-size: 0.75rem; }
   .chart-box { height: 230px; }
+  .charts-block { padding: 0; }
+  .chart-nav { position: static; transform: none; margin: 0 auto; }
+  .chart-nav--prev, .chart-nav--next { position: static; }
   .kpi-value { font-size: 1.2rem; }
   .app-toolbar { position: static; }
   .app-toolbar .btn { flex: 1 1 auto; }

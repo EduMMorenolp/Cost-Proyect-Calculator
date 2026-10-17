@@ -5,6 +5,21 @@ con el título en negrita, una descripción que se entiende sin abrir el código
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-16
+
+- **Added**: **Exportación a Excel con diseño**. Botón "Exportar Excel" que genera un libro `.xlsx` con varias hojas (Resumen, Desglose, Fases o Roles, Equipo, Escenarios, Supuestos), encabezados con estilo, formato de moneda y los gráficos del dashboard embebidos como imágenes en la hoja Resumen. Si la librería no carga, cae automáticamente al CSV. El CSV además ahora incluye título y fecha y deja los montos como números. [2026-10-16]
+  * **Files (Archivos)**: js/app.js, js/i18n.js, index.html. [2026-10-16]
+- **Added**: **Bloque de gráficos navegable (siempre 3)**. Los gráficos pasan a ser un bloque de tres con flechas laterales y puntos indicadores para recorrer distintos conjuntos: Composición, Detalle de costos / Equipo y esfuerzo, y Previsión, cada uno con tres gráficos según el modo (costos o tarifas). [2026-10-16]
+  * **Files (Archivos)**: js/charts.js, js/app.js, js/i18n.js, index.html, styles.css. [2026-10-16]
+- **Added**: **Versionado y comparación de escenarios**. La tabla de escenarios muestra la fecha de cada versión y la diferencia (Δ) contra la versión anterior, con color según suba o baje. [2026-10-16]
+  * **Files (Archivos)**: js/app.js, js/i18n.js. [2026-10-16]
+- **Added**: **Imprimir / PDF de todos los escenarios**. Botón en el modal de escenarios que abre una vista imprimible con la comparación completa (nombre, fecha, modo, total y Δ). [2026-10-16]
+  * **Files (Archivos)**: js/app.js, js/i18n.js, index.html. [2026-10-16]
+- **Added**: **Reporte / Propuesta imprimible**. Botón "Reporte / Propuesta" que genera una propuesta del proyecto (marca, fecha, precio, desglose y TCO) lista para imprimir o guardar como PDF. [2026-10-16]
+  * **Files (Archivos)**: js/app.js, js/i18n.js, index.html. [2026-10-16]
+- **Added**: **Enlace compartible con el estado**. Botón "Compartir" que copia la URL con el estado y los parámetros codificados; al abrir el enlace, la calculadora se restaura con esa configuración. [2026-10-16]
+  * **Files (Archivos)**: js/app.js, index.html. [2026-10-16]
+
 ## [1.5.1] - 2026-10-16
 
 - **Fixed**: **La Distribución por Fases no actualizaba su total ni la advertencia**. Al mover los sliders, el porcentaje de cada fase, el "Total" y el aviso de que la suma no da 100% quedaban desincronizados porque solo se escribían al recargar el formulario; el total mostraba siempre el 100% estático del HTML. Ahora se recalculan en vivo en cada cambio. [2026-10-16]

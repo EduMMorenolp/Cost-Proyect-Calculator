@@ -50,10 +50,10 @@ var CSC = (window.CSC = window.CSC || {});
       "tp-enabled", "tp-opt", "tp-pess", "risk-level",
       "engagement", "hours-per-month", "tco-maint", "tco-years", "tco-hosting", "tco-api",
       "timeline-body", "tco-body",
-      "chart1-title", "chart2-title", "chart3-title",
+      "chart1-title", "chart2-title", "chart3-title", "chart-prev", "chart-next", "chart-dots",
       "params-modal", "params-body", "params-reset", "params-export", "params-import", "params-close",
-      "scenarios-modal", "scenarios-body", "scenarios-close",
-      "btn-params", "btn-scenarios", "btn-print", "btn-csv"
+      "scenarios-modal", "scenarios-body", "scenarios-close", "scenarios-print",
+      "btn-params", "btn-scenarios", "btn-print", "btn-csv", "btn-excel", "btn-report", "btn-share"
     ].forEach((id) => { dom[id] = document.getElementById(id); });
   }
 
@@ -744,13 +744,24 @@ var CSC = (window.CSC = window.CSC || {});
     dom.warnings.hidden = list.length === 0;
   }
 
-  function updateChartTitles() {
-    const titles = mode() === "cost"
-      ? ["chartCostComposition", "chartPriceComposition", "chartCostPrice"]
-      : ["chartBreakdown", "chartRegion", "chartContract"];
-    dom["chart1-title"].textContent = t(titles[0]);
-    dom["chart2-title"].textContent = t(titles[1]);
-    dom["chart3-title"].textContent = t(titles[2]);
+  function renderChartDots() {
+    if (dom["chart-prev"]) dom["chart-prev"].setAttribute("aria-label", t("chartPrev"));
+    if (dom["chart-next"]) dom["chart-next"].setAttribute("aria-label", t("chartNext"));
+    const dots = dom["chart-dots"];
+    if (!dots || !CSC.Charts || !CSC.Charts.count) return;
+    const count = CSC.Charts.count();
+    const active = CSC.Charts.slide();
+    const names = CSC.Charts.slideNames();
+    let html = "";
+    for (let i = 0; i < count; i++) {
+      html += `<button class="chart-dot${i === active ? " is-active" : ""}" type="button" role="tab" aria-selected="${i === active}" data-slide="${i}" aria-label="${esc(t(names[i]))}">${esc(t(names[i]))}</button>`;
+    }
+    dots.innerHTML = html;
+  }
+
+  function chartNav(delta) {
+    if (delta > 0) CSC.Charts.next(); else CSC.Charts.prev();
+    recompute();
   }
 
   function renderTimeline(marketRes, costRes) {
@@ -814,8 +825,9 @@ var CSC = (window.CSC = window.CSC || {});
     renderTrace(marketRes, costRes);
     renderWarnings();
     updatePhaseUI();
-    updateChartTitles();
-    CSC.Charts.update({ mode: mode(), t: t, marketRes: marketRes, costRes: costRes, state: state, params: params });
+    const expected = mode() === "cost" ? costRes.expected : marketRes.expected;
+    CSC.Charts.update({ mode: mode(), t: t, marketRes: marketRes, costRes: costRes, state: state, params: params, expected: expected });
+    renderChartDots();
   }
 
   /* ---------------- Persistencia ---------------- */
@@ -1014,32 +1026,404 @@ var CSC = (window.CSC = window.CSC || {});
     reader.readAsText(file);
   }
 
-  /* ---------------- CSV ---------------- */
+  /* ---------------- Exportación (CSV / Excel) ---------------- */
   function exportCsv() {
     const rows = [];
+    const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+    rows.push([q(t("appTitle")), q(new Date().toLocaleString(locale()))]);
+    rows.push([]);
+    rows.push([q(t("xlsxCategory")), q(t("xlsxAmount"))]);
     if (mode() === "cost") {
       const c = M.computeCost(state, params);
-      rows.push(["Categoria", "Monto USD"]);
-      rows.push([t("catPersonnel"), Math.round(c.personnel)]);
-      rows.push([t("catVarProject"), Math.round(c.variableProject)]);
-      rows.push([t("catFixed"), Math.round(c.fixedAllocated)]);
-      if (c.costAdjTotal > 0.5) rows.push([t("catCostAdj"), Math.round(c.costAdjTotal)]);
-      if (c.riskAmount > 0.5) rows.push([t("stepRisk"), Math.round(c.riskAmount)]);
-      rows.push([t("catCost"), Math.round(c.adjustedCost)]);
-      rows.push([t("catProfit"), Math.round(c.profit)]);
-      if (c.priceAdjTotal > 0.5) rows.push([t("catPriceAdj"), Math.round(c.priceAdjTotal)]);
-      rows.push([t("catSalePrice"), Math.round(c.salePrice)]);
+      rows.push([q(t("catPersonnel")), Math.round(c.personnel)]);
+      rows.push([q(t("catVarProject")), Math.round(c.variableProject)]);
+      rows.push([q(t("catFixed")), Math.round(c.fixedAllocated)]);
+      if (c.costAdjTotal > 0.5) rows.push([q(t("catCostAdj")), Math.round(c.costAdjTotal)]);
+      if (c.riskAmount > 0.5) rows.push([q(t("stepRisk")), Math.round(c.riskAmount)]);
+      rows.push([q(t("catCost")), Math.round(c.adjustedCost)]);
+      rows.push([q(t("catProfit")), Math.round(c.profit)]);
+      if (c.priceAdjTotal > 0.5) rows.push([q(t("catPriceAdj")), Math.round(c.priceAdjTotal)]);
+      rows.push([q(t("catSalePrice")), Math.round(c.salePrice)]);
     } else {
       const res = M.computeForRegion(state, params, state.region);
-      rows.push(["Categoria", "Monto USD"]);
-      marketCategories(res).forEach((c) => rows.push([t(c.key), Math.round(c.value)]));
-      if (res.riskAmount > 0.5) rows.push([t("stepRisk"), Math.round(res.riskAmount)]);
-      rows.push([t("totalLabel"), Math.round(res.expected)]);
-      rows.push([t("kpiHours"), Math.round(res.totalHours)]);
-      rows.push([t("kpiRate"), res.blendedRate.toFixed(2)]);
+      marketCategories(res).forEach((c) => rows.push([q(t(c.key)), Math.round(c.value)]));
+      if (res.riskAmount > 0.5) rows.push([q(t("stepRisk")), Math.round(res.riskAmount)]);
+      rows.push([q(t("totalLabel")), Math.round(res.expected)]);
+      rows.push([q(t("kpiHours")), Math.round(res.totalHours)]);
+      rows.push([q(t("kpiRate")), res.blendedRate.toFixed(2)]);
     }
-    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const csv = rows.map((r) => r.join(",")).join("\r\n");
     download("presupuesto.csv", "\uFEFF" + csv, "text/csv;charset=utf-8;");
+  }
+
+  function downloadBlob(filename, blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /* Libro Excel con varias hojas, estilos y gráficos embebidos [Fase E] */
+  function exportExcel() {
+    if (typeof ExcelJS === "undefined") { exportCsv(); return; }
+    const isCost = mode() === "cost";
+    const marketRes = M.computeForRegion(state, params, state.region);
+    const costRes = M.computeCost(state, params);
+    const expected = isCost ? costRes.expected : marketRes.expected;
+    const tco = M.computeTco(expected, state);
+    const min = isCost ? costRes.rangeMin : marketRes.rangeMin;
+    const max = isCost ? costRes.rangeMax : marketRes.rangeMax;
+
+    const NAVY = "FF1E3A8A", BLUE = "FF2563EB", LIGHT = "FFDBEAFE", GREY = "FF475569", WHITE = "FFFFFFFF", RED = "FFB91C1C", GREEN = "FF15803D";
+    const MONEY = '"$"#,##0';
+    const wb = new ExcelJS.Workbook();
+    wb.creator = t("appTitle");
+    wb.created = new Date();
+
+    const write = (ws, rowIdx, cells) => {
+      const row = ws.getRow(rowIdx);
+      cells.forEach((cell, i) => {
+        const c = row.getCell(i + 1);
+        c.value = cell.v;
+        if (cell.money && typeof cell.v === "number") c.numFmt = MONEY;
+        if (cell.bold) c.font = { bold: true, color: { argb: cell.color || NAVY } };
+        else if (cell.color) c.font = { color: { argb: cell.color } };
+        if (cell.fill) c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: cell.fill } };
+        c.alignment = { horizontal: cell.align || (i === 0 ? "left" : "right") };
+      });
+      return row;
+    };
+    const sheetTitle = (ws, range, text) => {
+      ws.mergeCells(range);
+      const first = range.split(":")[0];
+      const c = ws.getCell(first);
+      c.value = text;
+      c.font = { size: 15, bold: true, color: { argb: WHITE } };
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY } };
+      c.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+      ws.getRow(parseInt(first.replace(/\D/g, ""), 10)).height = 28;
+    };
+    const headerRow = (ws, rowIdx, labels) => {
+      write(ws, rowIdx, labels.map((l) => ({ v: l, bold: true, color: WHITE, fill: BLUE })));
+      ws.getRow(rowIdx).height = 20;
+    };
+
+    /* ---- Resumen + gráficos ---- */
+    const ws = wb.addWorksheet(t("xlsxSummary"), { properties: { tabColor: { argb: BLUE } }, views: [{ showGridLines: false }] });
+    ws.getColumn(1).width = 30; ws.getColumn(2).width = 26; ws.getColumn(3).width = 18;
+    sheetTitle(ws, "A1:C1", t("appTitle"));
+    write(ws, 2, [{ v: t("reportGenerated") + " · " + new Date().toLocaleString(locale()), color: GREY }]);
+    let r = 4;
+    write(ws, r++, [{ v: isCost ? t("kpiSalePrice") : t("kpiTotal"), bold: true }, { v: expected, money: true, bold: true, color: NAVY }]);
+    write(ws, r++, [{ v: t("reportMode") }, { v: isCost ? t("modeCost") : t("modeMarket") }]);
+    write(ws, r++, [{ v: t("kpiRange") }, { v: fmtUSD(min) + " – " + fmtUSD(max) }]);
+    if (isCost) {
+      write(ws, r++, [{ v: t("monthsLabel") }, { v: costRes.months }]);
+      write(ws, r++, [{ v: t("profitMargin") }, { v: costRes.profitMargin + "%" }]);
+    } else {
+      write(ws, r++, [{ v: t("kpiHours"), bold: false }, { v: Math.round(marketRes.totalHours) }]);
+      write(ws, r++, [{ v: t("xlsxTeam") }, { v: marketRes.totalDevs }]);
+      write(ws, r++, [{ v: t("kpiRate") }, { v: marketRes.blendedRate, money: true }]);
+    }
+    if (tco.annual > 0.5) {
+      write(ws, r++, [{ v: t("tcoAnnualLabel") }, { v: tco.annual, money: true }]);
+      write(ws, r++, [{ v: tcoTotalLabel(tco) }, { v: tco.total, money: true }]);
+    }
+    const embeds = [];
+    ["chart-breakdown", "chart-region", "chart-contract"].forEach((id) => {
+      const canvas = document.getElementById(id);
+      if (!canvas || typeof canvas.toDataURL !== "function") return;
+      let data = null;
+      try { data = canvas.toDataURL("image/png"); } catch (e) { data = null; }
+      if (data && data.length > 200) embeds.push(data.split(",")[1]);
+    });
+    embeds.forEach((b64, i) => {
+      try {
+        const imgId = wb.addImage({ base64: b64, extension: "png" });
+        ws.addImage(imgId, { tl: { col: 0.1, row: r + i * 15 }, ext: { width: 520, height: 320 }, editAs: "oneCell" });
+      } catch (e) { /* imagen no soportada: se omite */ }
+    });
+
+    /* ---- Desglose ---- */
+    const wb1 = wb.addWorksheet(t("xlsxBreakdown"), { views: [{ showGridLines: false }] });
+    wb1.getColumn(1).width = 42; wb1.getColumn(2).width = 20;
+    sheetTitle(wb1, "A1:B1", t("xlsxBreakdown"));
+    headerRow(wb1, 3, [t("xlsxCategory"), t("xlsxAmount")]);
+    let rr = 4;
+    if (isCost) {
+      const base = [
+        [t("catPersonnel"), costRes.personnel],
+        [t("catVarProject"), costRes.variableProject],
+        [t("catFixed"), costRes.fixedAllocated]
+      ];
+      if (costRes.costAdjTotal > 0.5) base.push([t("catCostAdj"), costRes.costAdjTotal]);
+      if (costRes.riskAmount > 0.5) base.push([t("stepRisk"), costRes.riskAmount]);
+      base.push([t("catCost"), costRes.adjustedCost]);
+      base.push([t("catProfit"), costRes.profit]);
+      if (costRes.priceAdjTotal > 0.5) base.push([t("catPriceAdj"), costRes.priceAdjTotal]);
+      base.forEach((row) => write(wb1, rr++, [{ v: row[0] }, { v: row[1], money: true }]));
+      write(wb1, rr, [{ v: t("catSalePrice"), bold: true, fill: LIGHT }, { v: costRes.salePrice, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+    } else {
+      marketCategories(marketRes).forEach((c) => write(wb1, rr++, [{ v: t(c.key) }, { v: c.value, money: true }]));
+      if (marketRes.riskAmount > 0.5) write(wb1, rr++, [{ v: t("stepRisk") }, { v: marketRes.riskAmount, money: true }]);
+      write(wb1, rr, [{ v: t("totalLabel"), bold: true, fill: LIGHT }, { v: marketRes.expected, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+    }
+
+    /* ---- Fases (tarifas) o detalle de costos (modo costos) ---- */
+    if (!isCost) {
+      const wf = wb.addWorksheet(t("xlsxPhases"), { views: [{ showGridLines: false }] });
+      wf.getColumn(1).width = 30; wf.getColumn(2).width = 12; wf.getColumn(3).width = 18;
+      sheetTitle(wf, "A1:C1", t("xlsxPhases"));
+      headerRow(wf, 3, [t("xlsxPhases"), "%", t("xlsxAmount")]);
+      let f = 4;
+      [["analysis", t("catAnalysis")], ["design", t("catDesign")], ["implementation", t("catImplementation")], ["testing", t("catQA")]].forEach(([k, label]) => {
+        write(wf, f++, [{ v: label }, { v: (state.phases[k] || 0) + "%" }, { v: marketRes.phases[k], money: true }]);
+      });
+      write(wf, f, [{ v: t("totalLabel"), bold: true, fill: LIGHT }, { v: M.sumPhase(state.phases) + "%", bold: true, color: NAVY, fill: LIGHT }, { v: marketRes.totalBefore, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+
+      const region = (params.regions || []).find((x) => x.key === state.region) || { rates: {} };
+      const wt = wb.addWorksheet(t("xlsxTeam"), { views: [{ showGridLines: false }] });
+      wt.getColumn(1).width = 30; wt.getColumn(2).width = 14; wt.getColumn(3).width = 20;
+      sheetTitle(wt, "A1:C1", t("xlsxTeam"));
+      headerRow(wt, 3, [t("colRole"), t("colQty"), t("colMonthly")]);
+      let tt = 4;
+      if (state.teamMode === "role") {
+        (params.marketRoles || []).forEach((mr) => {
+          const qty = (state.marketTeam && state.marketTeam[mr.key]) || 0;
+          if (qty > 0) write(wt, tt++, [{ v: t("role" + cap(mr.key)) + " · " + t("col" + cap(mr.level)) }, { v: qty }, { v: (region.rates || {})[mr.level] || 0, money: true }]);
+        });
+      } else {
+        ["junior", "mid", "senior"].forEach((lv) => {
+          write(wt, tt++, [{ v: t("col" + cap(lv)) }, { v: (state.devs && state.devs[lv]) || 0 }, { v: (region.rates || {})[lv] || 0, money: true }]);
+        });
+      }
+    } else {
+      const wr = wb.addWorksheet(t("xlsxRoles"), { views: [{ showGridLines: false }] });
+      wr.getColumn(1).width = 28; wr.getColumn(2).width = 10; wr.getColumn(3).width = 16; wr.getColumn(4).width = 12; wr.getColumn(5).width = 12; wr.getColumn(6).width = 18;
+      sheetTitle(wr, "A1:F1", t("xlsxRoles"));
+      headerRow(wr, 3, [t("colRole"), t("colQty"), t("colMonthly"), t("colMonths"), t("colDedication"), t("totalLabel")]);
+      let k = 4;
+      costRes.roles.forEach((role) => {
+        write(wr, k++, [{ v: role.role }, { v: role.qty }, { v: role.monthly, money: true }, { v: role.months }, { v: role.dedication + "%" }, { v: role.subtotal, money: true }]);
+      });
+      write(wr, k, [{ v: t("catPersonnel"), bold: true, fill: LIGHT }, { v: "" }, { v: "" }, { v: "" }, { v: "" }, { v: costRes.personnel, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+
+      const wv = wb.addWorksheet(t("secVariableProject"), { views: [{ showGridLines: false }] });
+      wv.getColumn(1).width = 42; wv.getColumn(2).width = 18;
+      sheetTitle(wv, "A1:B1", t("secVariableProject"));
+      headerRow(wv, 3, [t("colConcept"), t("colAmount")]);
+      let vv = 4;
+      (state.cost.variableCosts || []).forEach((v) => write(wv, vv++, [{ v: v.concept }, { v: Number(v.amount) || 0, money: true }]));
+      write(wv, vv, [{ v: t("totalLabel"), bold: true, fill: LIGHT }, { v: costRes.variableProject, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+
+      const wf2 = wb.addWorksheet(t("secFixed"), { views: [{ showGridLines: false }] });
+      wf2.getColumn(1).width = 42; wf2.getColumn(2).width = 22;
+      sheetTitle(wf2, "A1:B1", t("secFixed"));
+      headerRow(wf2, 3, [t("colConcept"), t("colMonthlyFixed")]);
+      let ff = 4;
+      (state.cost.fixedCosts || []).forEach((fc) => write(wf2, ff++, [{ v: fc.concept }, { v: Number(fc.monthly) || 0, money: true }]));
+      write(wf2, ff, [{ v: t("fixedMonthlyTotal"), bold: true, fill: LIGHT }, { v: costRes.fixedMonthly, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+    }
+
+    /* ---- Escenarios ---- */
+    if (scenarios.length) {
+      const wsc = wb.addWorksheet(t("xlsxScenarios"), { views: [{ showGridLines: false }] });
+      wsc.getColumn(1).width = 26; wsc.getColumn(2).width = 14; wsc.getColumn(3).width = 22; wsc.getColumn(4).width = 20; wsc.getColumn(5).width = 18;
+      sheetTitle(wsc, "A1:E1", t("scenariosReportTitle"));
+      headerRow(wsc, 3, [t("scenariosTitle"), t("scenarioDate"), t("reportMode"), t("kpiTotal"), t("versionDelta")]);
+      let s = 4;
+      scenarios.forEach((sc, i) => {
+        const val = primaryFor(sc);
+        const prev = i > 0 ? primaryFor(scenarios[i - 1]) : null;
+        const delta = prev == null ? null : val - prev;
+        write(wsc, s++, [
+          { v: sc.name },
+          { v: sc.createdAt ? new Date(sc.createdAt).toLocaleDateString(locale()) : "—" },
+          { v: (sc.state.mode || "market") === "cost" ? t("modeCost") : t("modeMarket") },
+          { v: val, money: true },
+          { v: delta == null ? "—" : (delta >= 0 ? "+" : "−") + fmtUSD(Math.abs(delta)), color: delta > 0 ? RED : delta < 0 ? GREEN : GREY, bold: true }
+        ]);
+      });
+    }
+
+    /* ---- Supuestos ---- */
+    const wa = wb.addWorksheet(t("xlsxAssumptions"), { views: [{ showGridLines: false }] });
+    wa.getColumn(1).width = 34; wa.getColumn(2).width = 34;
+    sheetTitle(wa, "A1:B1", t("xlsxAssumptions"));
+    let a = 3;
+    const assumption = (label, value) => write(wa, a++, [{ v: label }, { v: value }]);
+    assumption(t("reportMode"), isCost ? t("modeCost") : t("modeMarket"));
+    if (!isCost) {
+      assumption(t("regionLabel"), t("region" + state.region.toUpperCase()));
+      assumption(t("effortLabel"), t("effort" + cap(state.effortMethod)));
+      assumption(t("contractLabel"), t("contract" + cap(state.contract)));
+      assumption(t("fixedMargin"), params.fixedMargin + "%");
+      assumption(t("budgetRangePct"), "±" + params.budgetRangePct + "%");
+    } else {
+      assumption(t("profitMargin"), (state.cost.profitMargin || 0) + "%");
+      assumption(t("rolesUnitLabel"), t("rolesUnit" + cap(state.cost.rolesUnit)));
+    }
+    assumption(t("riskLabel"), t("risk" + cap(state.risk.level)));
+    assumption(t("engagementLabel"), t("engagement" + cap(state.engagement)));
+    assumption(t("hoursPerMonthLabel"), state.timeline.hoursPerMonth);
+    assumption(t("tcoMaintenance"), state.tco.maintenancePct + "%");
+    assumption(t("tcoYears"), state.tco.years);
+    assumption(t("tcoHosting"), fmtUSD(state.tco.hostingMonthly));
+    assumption(t("tcoApi"), fmtUSD(state.tco.apiMonthly));
+
+    const fname = "presupuesto-" + new Date().toISOString().slice(0, 10) + ".xlsx";
+    wb.xlsx.writeBuffer().then((buffer) => {
+      downloadBlob(fname, new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+    }).catch(() => exportCsv());
+  }
+
+  function tcoTotalLabel(tco) {
+    return t("tcoTotalLabel") + " (" + tco.years + " " + t("tcoYearsSuffix") + ")";
+  }
+
+  /* ---------------- Compartir y reporte [Fase E] ---------------- */
+  function encodeState() {
+    const payload = JSON.stringify({ v: 1, state: state, params: params });
+    return btoa(unescape(encodeURIComponent(payload)));
+  }
+  function decodeState(str) {
+    return JSON.parse(decodeURIComponent(escape(atob(str))));
+  }
+
+  function shareLink() {
+    const url = location.origin + location.pathname + "#s=" + encodeState();
+    const okCopy = () => alert(t("shareCopied"));
+    const fallback = () => window.prompt(t("btnShare"), url);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(okCopy, fallback);
+      } else {
+        fallback();
+      }
+    } catch (e) {
+      fallback();
+    }
+  }
+
+  function loadFromHash() {
+    const m = /[#&]s=([^&]+)/.exec(location.hash || "");
+    if (!m) return false;
+    try {
+      const data = decodeState(m[1]);
+      if (data.params) params = M.deepMerge(M.clone(M.DEFAULT_PARAMS), data.params);
+      if (data.state) state = M.deepMerge(M.clone(M.DEFAULT_STATE), data.state);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function reportHtml() {
+    const isCost = mode() === "cost";
+    const marketRes = M.computeForRegion(state, params, state.region);
+    const costRes = M.computeCost(state, params);
+    const expected = isCost ? costRes.expected : marketRes.expected;
+    const tco = M.computeTco(expected, state);
+    const row = (l, v) => `<tr><td>${esc(l)}</td><td class="r">${esc(v)}</td></tr>`;
+
+    let detail;
+    if (isCost) {
+      detail = row(t("kpiSalePrice"), fmtUSD(costRes.salePrice)) +
+        row(t("catPersonnel"), fmtUSD(costRes.personnel)) +
+        row(t("catVarProject"), fmtUSD(costRes.variableProject)) +
+        row(t("catFixed"), fmtUSD(costRes.fixedAllocated)) +
+        (costRes.riskAmount > 0.5 ? row(t("stepRisk"), fmtUSD(costRes.riskAmount)) : "") +
+        row(t("catCost"), fmtUSD(costRes.adjustedCost)) +
+        row(t("catProfit"), fmtUSD(costRes.profit));
+    } else {
+      detail = row(t("effortLabel"), t("effort" + cap(marketRes.effortMethod))) +
+        row(t("stepTotalHours"), fmtNum(marketRes.totalHours) + " " + t("unitHours")) +
+        row(t("stepRate"), fmtUSD(marketRes.blendedRate) + t("unitPerHour")) +
+        row(t("catAnalysis"), fmtUSD(marketRes.phases.analysis)) +
+        row(t("catDesign"), fmtUSD(marketRes.phases.design)) +
+        row(t("catImplementation"), fmtUSD(marketRes.phases.implementation)) +
+        row(t("catQA"), fmtUSD(marketRes.phases.testing)) +
+        row(t("catExtras"), fmtUSD(marketRes.extras)) +
+        row(t("catPost"), fmtUSD(marketRes.post)) +
+        row(t("catMargin"), fmtUSD(marketRes.margin));
+    }
+    if (tco.annual > 0.5) {
+      detail += row(t("tcoAnnualLabel"), fmtUSD(tco.annual)) +
+        row(t("tcoTotalLabel") + " " + tco.years + " " + t("tcoYearsSuffix"), fmtUSD(tco.total));
+    }
+
+    const dateStr = new Date().toLocaleDateString(locale());
+    return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><title>${esc(t("reportTitle"))}</title>
+<style>
+  body{font-family:'Inter',system-ui,'Segoe UI',Roboto,sans-serif;color:#1e293b;margin:36px;max-width:760px;}
+  h1{font-size:20px;margin:0 0 2px;} h2{font-size:13px;margin:24px 0 8px;color:#1e3a8a;border-bottom:2px solid #2563eb;padding-bottom:4px;text-transform:uppercase;letter-spacing:.03em;}
+  .muted{color:#64748b;font-size:12px;} .big{font-size:30px;font-weight:800;color:#1e3a8a;margin:6px 0;}
+  table{border-collapse:collapse;width:100%;font-size:13px;} td{padding:6px;border-bottom:1px solid #eef2f7;} .r{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+  @media print{body{margin:0;}}
+</style></head><body>
+  <h1>${esc(t("appTitle"))}</h1>
+  <p class="muted">${esc(t("reportGenerated"))} · ${esc(dateStr)}</p>
+  <h2>${esc(t("reportTitle"))}</h2>
+  <div class="big">${esc(fmtUSD(expected))}</div>
+  <p class="muted">${esc(t("reportDate"))}: ${esc(dateStr)}</p>
+  <h2>${esc(isCost ? t("kpiSalePrice") : t("kpiTotal"))}</h2>
+  <table>${detail}</table>
+  <p class="muted" style="margin-top:26px">${esc(t("disclaimer"))}</p>
+</body></html>`;
+  }
+
+  function openPrintable(html) {
+    let w = null;
+    try { w = window.open("", "_blank"); } catch (e) { w = null; }
+    if (!w) { download("propuesta.html", html, "text/html"); return; }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    try { w.focus(); } catch (e) { /* noop */ }
+  }
+
+  function generateReport() {
+    openPrintable(reportHtml());
+  }
+
+  function scenariosReportHtml() {
+    const dateStr = new Date().toLocaleDateString(locale());
+    const rows = scenarios
+      .map((s, i) => {
+        const val = primaryFor(s);
+        const prev = i > 0 ? primaryFor(scenarios[i - 1]) : null;
+        const delta = prev == null ? null : val - prev;
+        const deltaTxt = delta == null ? "—" : (delta >= 0 ? "+" : "−") + fmtUSD(Math.abs(delta));
+        const dateTxt = s.createdAt ? new Date(s.createdAt).toLocaleDateString(locale()) : "—";
+        const modeTxt = (s.state.mode || "market") === "cost" ? t("modeCost") : t("modeMarket");
+        return `<tr><td>${esc(s.name)}</td><td>${esc(dateTxt)}</td><td>${esc(modeTxt)}</td><td class="r">${esc(fmtUSD(val))}</td><td class="r">${esc(deltaTxt)}</td></tr>`;
+      })
+      .join("");
+    return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><title>${esc(t("scenariosReportTitle"))}</title>
+<style>
+  body{font-family:'Inter',system-ui,'Segoe UI',Roboto,sans-serif;color:#1e293b;margin:36px;}
+  h1{font-size:20px;margin:0 0 2px;} h2{font-size:13px;margin:22px 0 8px;color:#1e3a8a;border-bottom:2px solid #2563eb;padding-bottom:4px;text-transform:uppercase;letter-spacing:.03em;}
+  .muted{color:#64748b;font-size:12px;}
+  table{border-collapse:collapse;width:100%;font-size:13px;} th{text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;padding:6px;border-bottom:2px solid #e2e8f0;}
+  td{padding:6px;border-bottom:1px solid #eef2f7;} .r{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+  @media print{body{margin:0;}}
+</style></head><body>
+  <h1>${esc(t("appTitle"))}</h1>
+  <p class="muted">${esc(t("reportGenerated"))} · ${esc(dateStr)}</p>
+  <h2>${esc(t("scenariosReportTitle"))}</h2>
+  <table><thead><tr><th>${esc(t("scenariosTitle"))}</th><th>${esc(t("scenarioDate"))}</th><th>${esc(t("reportMode"))}</th><th class="r">${esc(t("kpiTotal"))}</th><th class="r">${esc(t("versionDelta"))}</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <p class="muted" style="margin-top:26px">${esc(t("disclaimer"))}</p>
+</body></html>`;
+  }
+
+  function printScenarios() {
+    if (scenarios.length === 0) return;
+    openPrintable(scenariosReportHtml());
   }
 
   /* ---------------- Escenarios ---------------- */
@@ -1059,21 +1443,31 @@ var CSC = (window.CSC = window.CSC || {});
     if (scenarios.length === 0) return controls + `<p class="empty-note">${t("noScenarios")}</p>`;
 
     const rows = scenarios
-      .map((s, i) => `<tr>
+      .map((s, i) => {
+        const val = primaryFor(s);
+        const prev = i > 0 ? primaryFor(scenarios[i - 1]) : null;
+        const delta = prev == null ? null : val - prev;
+        const deltaTxt = delta == null ? "—" : (delta >= 0 ? "+" : "−") + fmtUSD(Math.abs(delta));
+        const dateTxt = s.createdAt ? new Date(s.createdAt).toLocaleDateString(locale()) : "—";
+        const deltaCls = delta == null ? "" : delta > 0 ? "delta-up" : delta < 0 ? "delta-down" : "";
+        return `<tr>
         <td>${esc(s.name)}</td>
-        <td>${fmtUSD(primaryFor(s))}</td>
+        <td>${esc(dateTxt)}</td>
+        <td>${fmtUSD(val)}</td>
+        <td class="${deltaCls}">${esc(deltaTxt)}</td>
         <td class="row-actions">
           <button class="btn btn--ghost" data-load="${i}" type="button">${t("loadLabel")}</button>
           <button class="btn btn--ghost btn--danger" data-del="${i}" type="button">${t("deleteLabel")}</button>
         </td>
-      </tr>`)
+      </tr>`;
+      })
       .join("");
 
     return `${controls}
       <h3 class="param-section">${t("compareTitle")}</h3>
       <div class="table-scroll">
         <table class="param-table">
-          <thead><tr><th>${t("scenariosTitle")}</th><th>${t("kpiTotal")}</th><th></th></tr></thead>
+          <thead><tr><th>${t("scenariosTitle")}</th><th>${t("scenarioDate")}</th><th>${t("kpiTotal")}</th><th>${t("versionDelta")}</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -1197,6 +1591,19 @@ var CSC = (window.CSC = window.CSC || {});
     dom["btn-scenarios"].addEventListener("click", (e) => openScenarios(e.currentTarget));
     dom["btn-print"].addEventListener("click", () => window.print());
     dom["btn-csv"].addEventListener("click", exportCsv);
+    dom["btn-excel"].addEventListener("click", exportExcel);
+    dom["btn-report"].addEventListener("click", generateReport);
+    dom["btn-share"].addEventListener("click", shareLink);
+
+    // Navegación del bloque de gráficos (conjuntos de 3) [Fase E]
+    if (dom["chart-prev"]) dom["chart-prev"].addEventListener("click", (e) => { e.preventDefault(); chartNav(-1); });
+    if (dom["chart-next"]) dom["chart-next"].addEventListener("click", (e) => { e.preventDefault(); chartNav(1); });
+    if (dom["chart-dots"]) dom["chart-dots"].addEventListener("click", (e) => {
+      const dot = e.target.closest("[data-slide]");
+      if (!dot) return;
+      CSC.Charts.goTo(Number(dot.dataset.slide));
+      recompute();
+    });
 
     dom["params-body"].addEventListener("input", onParamInput);
     dom["params-body"].addEventListener("change", onParamInput);
@@ -1220,6 +1627,7 @@ var CSC = (window.CSC = window.CSC || {});
       if (e.key === "Enter" && e.target.id === "scenario-name") { e.preventDefault(); saveScenario(); }
     });
     dom["scenarios-close"].addEventListener("click", () => closeModal(dom["scenarios-modal"]));
+    dom["scenarios-print"].addEventListener("click", printScenarios);
 
     $$(".modal-backdrop").forEach((m) => {
       m.addEventListener("mousedown", (e) => { if (e.target === m) closeModal(m); });
@@ -1236,6 +1644,7 @@ var CSC = (window.CSC = window.CSC || {});
   function init() {
     cacheDom();
     CSC.Charts.init();
+    loadFromHash();
     setLanguage(M.loadLang());
     bindEvents();
   }

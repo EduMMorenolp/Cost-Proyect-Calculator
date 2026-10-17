@@ -20,9 +20,9 @@ No requiere instalación ni build:
 1. Cloná o descargá el repositorio.
 2. Abrí `index.html` en el navegador (doble clic o "Abrir con").
 
-Tailwind CSS y Chart.js se cargan por CDN, así que el navegador necesita conexión a internet la
-primera vez. Para publicarlo, subí los archivos a **GitHub Pages, Vercel o Netlify** (despliegue
-estático).
+Tailwind CSS, Chart.js y ExcelJS se cargan por CDN, así que el navegador necesita conexión a
+internet la primera vez. Para publicarlo, subí los archivos a **GitHub Pages, Vercel o Netlify**
+(despliegue estático).
 
 ## Estructura
 
@@ -75,6 +75,30 @@ Precio de venta = costo total + utilidad + ajustes de precio
 Salidas: KPIs de precio de venta, costo total, utilidad ($ y %) y variable/fijo; donut de
 composición del costo y del precio; barras de costo vs. utilidad vs. precio; y traza paso a paso.
 
+## Métodos de estimación de esfuerzo
+
+En el **modo tarifas** el esfuerzo (horas) se estima con el método que elijas:
+
+- **Complejidad clásica:** horas base por complejidad (pequeño / mediano / grande).
+- **Por catálogo:** arquetipo base + funcionalidades seleccionadas, con factor no lineal acumulado.
+- **COCOMO básico:** `PM = a × KLOC^b × EAF`, con modo orgánico/semiacoplado/empotrado y 6
+  conductores de costo.
+- **Puntos de función:** `AFP = UFP × (0.65 + 0.01 × ΣGSC)` convertidos a horas.
+- **Puntos de historia:** puntos ÷ velocidad × horas por sprint.
+- **Horas manuales:** carga directa.
+
+En el **modo costos** el equipo se define por roles con cantidad, costo mensual (o por hora) y
+meses de dedicación.
+
+## Riesgo, cronograma y TCO
+
+- **Estimación de 3 puntos (PERT):** optimista / realista / pesimista → valor esperado
+  `(O + 4R + P) / 6` y rango mínimo-máximo.
+- **Buffer de riesgo:** porcentaje por nivel (sin buffer / bajo / medio / alto).
+- **Cronograma:** duración a partir del esfuerzo y el tamaño del equipo, con hitos por fase.
+- **TCO:** mantenimiento anual, hosting y APIs → costo operativo anual y costo total a N años.
+- **Engagement:** staff augmentation / equipo dedicado / outsourcing con overhead configurable.
+
 ## Parámetros configurables
 
 Desde el botón **Parámetros** se edita todo el modelo del modo tarifas: matriz de tarifas por
@@ -86,11 +110,21 @@ editable y ampliable.
 - **Restaurar valores** por defecto.
 - **Importar / Exportar JSON** para compartir configuraciones.
 
-## Escenarios, exportación e idioma
+## Gráficos, escenarios, reportes e idioma
 
-- **Escenarios:** guardá configuraciones con nombre, recargalas y comparalas en tabla y gráfico.
-- **Exportar CSV:** descarga el desglose del presupuesto.
+- **Bloque de gráficos navegable:** siempre tres gráficos por conjunto, con flechas laterales y
+  puntos indicadores para alternar entre **Composición**, **Detalle / Equipo** y **Previsión**
+  (según el modo).
+- **Escenarios:** guardá configuraciones con nombre y fecha, recargalas y comparalas en tabla
+  (con la diferencia **Δ** contra la versión anterior) y en gráfico; podés **imprimir/PDF** toda la
+  comparación.
+- **Reporte / Propuesta:** genera una propuesta imprimible (marca, fecha, precio, desglose y TCO).
+- **Exportar Excel:** libro `.xlsx` con hojas (Resumen, Desglose, Fases/Roles, Equipo, Escenarios,
+  Supuestos), estilos, formato de moneda y los gráficos embebidos. Fallback a CSV si la librería no
+  está disponible.
+- **Exportar CSV:** desglose del presupuesto con título y fecha.
 - **Imprimir / PDF:** estilos de impresión para generar un PDF limpio del dashboard.
+- **Compartir:** copia una URL con el estado y los parámetros; al abrirla se restaura esa config.
 - **Idioma:** selector ES/EN que re-traduce toda la interfaz.
 
 ## Ejemplo de referencia
@@ -113,3 +147,4 @@ y margen del 25%) el resultado es:
 - HTML5 + CSS3 (Tailwind CSS por CDN)
 - JavaScript (Vanilla)
 - Chart.js (por CDN)
+- ExcelJS (por CDN, exportación a Excel)
