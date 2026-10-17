@@ -39,6 +39,7 @@ var CSC = (window.CSC = window.CSC || {});
     fixedMargin: 15,     // % margen precio fijo
     marginAppliesToAll: false,
     budgetRangePct: 20,  // ± %
+    riskBuffers: { none: 0, low: 10, medium: 20, high: 35 }, // % por nivel de riesgo [Fase B]
 
     // Catálogo de arquetipos (horas base) [Fase A]
     archetypes: [
@@ -142,6 +143,10 @@ var CSC = (window.CSC = window.CSC || {});
     },
     phases: { analysis: 15, design: 20, implementation: 45, testing: 20 },
     contract: "fixed",
+
+    // Incertidumbre [Fase B]
+    threePoint: { enabled: false, optimistic: 10, pessimistic: 30 },
+    risk: { level: "none" }, // none | low | medium | high
 
     /* ---- Modo costos (costo + margen) ---- */
     mode: "cost", // "market" | "cost"  (default: costos)
@@ -293,8 +298,35 @@ var CSC = (window.CSC = window.CSC || {});
     return total;
   }
 
-  function blendedRateFor(state, params, region) {
-    if (state.teamMode === "role") {
+  /* ---------------- Incertidumbre (3 puntos + riesgo) [Fase B] ---------------- */
+  function riskPctFor(state, params) {
+    const level = (state.risk && state.risk.level) || "none";
+    const buffers = (params && params.riskBuffers) || {};
+    return num(buffers[level], num(buffers.none, 0));
+  }
+
+  function applyUncertainty(baseTotal, state, params) {
+    const riskPct = riskPctFor(state, params);
+    const withRisk = baseTotal * (1 + riskPct / 100);
+    const tp = state.threePoint || {};
+    let expected = withRisk;
+    let rangeMin = withRisk;
+    let rangeMax = withRisk;
+    if (tp.enabled) {
+      const o = withRisk * (1 - num(tp.optimistic) / 100);
+      const p = withRisk * (1 + num(tp.pessimistic) / 100);
+      expected = (o + 4 * withRisk + p) / 6;
+      rangeMin = o;
+      rangeMax = p;
+    } else {
+      const bp = num(params.budgetRangePct);
+      rangeMin = withRisk * (1 - bp / 100);
+      rangeMax = withRisk * (1 + bp / 100);
+    }
+    return { riskPct: riskPct, riskAmount: withRisk - baseTotal, withRisk: withRisk, expected: expected, rangeMin: rangeMin, rangeMax: rangeMax };
+  }
+
+  function blendedRateFor(state, params, region) {    if (state.teamMode === "role") {
       const team = state.marketTeam || {};
       let count = 0;
       let sum = 0;
@@ -352,9 +384,9 @@ var CSC = (window.CSC = window.CSC || {});
 
     const hourlyTotal = devWithSO + extras + post;
     const fixedTotal = hourlyTotal + marginAlways;
-    const total = state.contract === "fixed" ? fixedTotal : hourlyTotal;
+    const totalBefore = state.contract === "fixed" ? fixedTotal : hourlyTotal;
 
-    const budgetRangePct = Number(params.budgetRangePct) || 0;
+    const unc = applyUncertainty(totalBefore, state, params);
 
     return {
       regionKey: regionKey,
@@ -380,14 +412,19 @@ var CSC = (window.CSC = window.CSC || {});
       margin: margin,
       hourlyTotal: hourlyTotal,
       fixedTotal: fixedTotal,
-      total: total,
-      rangeMin: total * (1 - budgetRangePct / 100),
-      rangeMax: total * (1 + budgetRangePct / 100)
+      totalBefore: totalBefore,
+      total: unc.withRisk,
+      expected: unc.expected,
+      riskPct: unc.riskPct,
+      riskAmount: unc.riskAmount,
+      rangeMin: unc.rangeMin,
+      rangeMax: unc.rangeMax
     };
   }
 
   /* ---------------- Motor del modo costos (costo + margen) ---------------- */
-  function computeCost(state) {
+  function computeCost(state, params) {
+    params = params || {};
     const c = state.cost || {};
     const rolesUnit = c.rolesUnit === "hours" ? "hours" : "months";
 
@@ -424,7 +461,9 @@ var CSC = (window.CSC = window.CSC || {});
     const costAdjTotal = adjustments
       .filter((a) => a.appliesTo === "cost")
       .reduce((acc, a) => acc + (a.type === "amount" ? Number(a.value) || 0 : (totalCost * (Number(a.value) || 0)) / 100), 0);
-    const adjustedCost = totalCost + costAdjTotal;
+    const riskPct = riskPctFor(state, params);
+    const riskAmount = (totalCost * riskPct) / 100;
+    const adjustedCost = totalCost + costAdjTotal + riskAmount;
 
     const profitMargin = Number(c.profitMargin) || 0;
     const profit = (adjustedCost * profitMargin) / 100;
@@ -434,6 +473,18 @@ var CSC = (window.CSC = window.CSC || {});
       .filter((a) => a.appliesTo === "price")
       .reduce((acc, a) => acc + (a.type === "amount" ? Number(a.value) || 0 : (basePrice * (Number(a.value) || 0)) / 100), 0);
     const salePrice = basePrice + priceAdjTotal;
+
+    const tp = state.threePoint || {};
+    let expected = salePrice;
+    let rangeMin = salePrice;
+    let rangeMax = salePrice;
+    if (tp.enabled) {
+      const o = salePrice * (1 - num(tp.optimistic) / 100);
+      const p = salePrice * (1 + num(tp.pessimistic) / 100);
+      expected = (o + 4 * salePrice + p) / 6;
+      rangeMin = o;
+      rangeMax = p;
+    }
 
     return {
       roles: roles,
@@ -446,12 +497,17 @@ var CSC = (window.CSC = window.CSC || {});
       fixedAllocated: fixedAllocated,
       totalCost: totalCost,
       costAdjTotal: costAdjTotal,
+      riskPct: riskPct,
+      riskAmount: riskAmount,
       adjustedCost: adjustedCost,
       profitMargin: profitMargin,
       profit: profit,
       basePrice: basePrice,
       priceAdjTotal: priceAdjTotal,
-      salePrice: salePrice
+      salePrice: salePrice,
+      expected: expected,
+      rangeMin: rangeMin,
+      rangeMax: rangeMax
     };
   }
 

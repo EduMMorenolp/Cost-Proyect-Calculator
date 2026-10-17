@@ -213,6 +213,27 @@
             </div>
             <p class="footnote" data-i18n="footnote">Los valores son editables.</p>
           </section>
+
+          <section class="card">
+            <h2 class="card-title" data-i18n="secUncertainty">Estimación de 3 Puntos y Riesgo</h2>
+            <label class="option-row option-row--plain">
+              <input type="checkbox" id="tp-enabled" class="checkbox" />
+              <span class="option-text" data-i18n="tpEnable">Rango con 3 puntos (optimista / realista / pesimista)</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3" style="margin-top:0.6rem">
+              <div class="mini-field"><label for="tp-opt" data-i18n="tpOptimistic">Optimista (−%)</label><input id="tp-opt" class="input" type="number" min="0" max="90" value="10" /></div>
+              <div class="mini-field"><label for="tp-pess" data-i18n="tpPessimistic">Pesimista (+%)</label><input id="tp-pess" class="input" type="number" min="0" value="30" /></div>
+            </div>
+            <div class="field" style="margin-top:0.85rem;margin-bottom:0">
+              <label class="field-label" for="risk-level" data-i18n="riskLabel">Nivel de riesgo</label>
+              <select id="risk-level" class="input">
+                <option value="none" data-i18n="riskNone">Sin buffer</option>
+                <option value="low" data-i18n="riskLow">Bajo</option>
+                <option value="medium" data-i18n="riskMedium">Medio</option>
+                <option value="high" data-i18n="riskHigh">Alto</option>
+              </select>
+            </div>
+          </section>
         </div>
 
         <!-- ===== PANEL: MODO COSTOS (inyectado por JS) ===== -->

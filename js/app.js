@@ -47,6 +47,7 @@ var CSC = (window.CSC = window.CSC || {});
       "kpi-grid", "numeric-breakdown", "trace-body",
       "market-panel", "cost-panel", "cost-body",
       "effort-method", "effort-body", "team-profile", "team-role", "market-team-body",
+      "tp-enabled", "tp-opt", "tp-pess", "risk-level",
       "chart1-title", "chart2-title", "chart3-title",
       "params-modal", "params-body", "params-reset", "params-export", "params-import", "params-close",
       "scenarios-modal", "scenarios-body", "scenarios-close",
@@ -75,6 +76,7 @@ var CSC = (window.CSC = window.CSC || {});
     state.mode = next === "cost" ? "cost" : "market";
     persist();
     renderModeUI();
+    renderForm();
     recompute();
   }
 
@@ -293,6 +295,14 @@ var CSC = (window.CSC = window.CSC || {});
       if (out) out.textContent = state.phases[k] + "%";
     });
     dom.contract.value = state.contract;
+    if (dom["tp-enabled"]) {
+      dom["tp-enabled"].checked = !!state.threePoint.enabled;
+      dom["tp-opt"].value = state.threePoint.optimistic;
+      dom["tp-pess"].value = state.threePoint.pessimistic;
+      dom["tp-opt"].disabled = !state.threePoint.enabled;
+      dom["tp-pess"].disabled = !state.threePoint.enabled;
+    }
+    if (dom["risk-level"]) dom["risk-level"].value = state.risk.level || "none";
     $$(".mode-btn").forEach((b) => {
       const active = b.dataset.mode === state.extrasMode;
       b.classList.toggle("is-active", active);
@@ -331,6 +341,12 @@ var CSC = (window.CSC = window.CSC || {});
       const slider = $(`.phase[data-key="${k}"]`);
       if (slider) state.phases[k] = Math.max(0, num(slider.value));
     });
+    if (dom["tp-enabled"]) {
+      state.threePoint.enabled = dom["tp-enabled"].checked;
+      state.threePoint.optimistic = Math.max(0, num(dom["tp-opt"].value));
+      state.threePoint.pessimistic = Math.max(0, num(dom["tp-pess"].value));
+    }
+    if (dom["risk-level"]) state.risk.level = dom["risk-level"].value;
   }
 
   /* ---------------- Panel de costos ---------------- */
@@ -346,7 +362,7 @@ var CSC = (window.CSC = window.CSC || {});
 
   function renderCostPanel() {
     const c = state.cost;
-    const cr = M.computeCost(state);
+    const cr = M.computeCost(state, params);
 
     const rolesRows = c.roles
       .map((r, i) => `<tr>
@@ -479,11 +495,32 @@ var CSC = (window.CSC = window.CSC || {});
           </table>
         </div>
         ${addButtonsRow("adjust")}
+      </section>
+
+      <section class="card">
+        <h2 class="card-title" data-i18n="secUncertainty">${t("secUncertainty")}</h2>
+        <label class="option-row option-row--plain">
+          <input type="checkbox" class="checkbox" data-cost="threePoint.enabled" ${state.threePoint.enabled ? "checked" : ""} />
+          <span class="option-text">${t("tpEnable")}</span>
+        </label>
+        <div class="grid grid-cols-2 gap-3" style="margin-top:0.6rem">
+          <div class="mini-field"><label>${t("tpOptimistic")}</label><input class="input" type="number" min="0" max="90" data-cost="threePoint.optimistic" value="${state.threePoint.optimistic}" ${state.threePoint.enabled ? "" : "disabled"}></div>
+          <div class="mini-field"><label>${t("tpPessimistic")}</label><input class="input" type="number" min="0" data-cost="threePoint.pessimistic" value="${state.threePoint.pessimistic}" ${state.threePoint.enabled ? "" : "disabled"}></div>
+        </div>
+        <div class="field" style="margin-top:0.85rem;margin-bottom:0">
+          <label class="field-label">${t("riskLabel")}</label>
+          <select class="input" data-cost="risk.level">
+            <option value="none" ${state.risk.level === "none" ? "selected" : ""}>${t("riskNone")}</option>
+            <option value="low" ${state.risk.level === "low" ? "selected" : ""}>${t("riskLow")}</option>
+            <option value="medium" ${state.risk.level === "medium" ? "selected" : ""}>${t("riskMedium")}</option>
+            <option value="high" ${state.risk.level === "high" ? "selected" : ""}>${t("riskHigh")}</option>
+          </select>
+        </div>
       </section>`;
   }
 
   function updateCostSubtotals() {
-    const cr = M.computeCost(state);
+    const cr = M.computeCost(state, params);
     state.cost.roles.forEach((_, i) => {
       const cell = $(`#cost-body [data-subtotal="roles.${i}"]`);
       if (cell && cr.roles[i]) cell.textContent = fmtUSD(cr.roles[i].subtotal);
@@ -497,9 +534,11 @@ var CSC = (window.CSC = window.CSC || {});
     if (!path) return;
     let value;
     if (target.type === "number") value = Math.max(0, num(target.value));
+    else if (target.type === "checkbox") value = target.checked;
     else value = target.value;
-    M.setByPath(state.cost, path, value);
-    if (path === "allocationMethod" || path === "rolesUnit") {
+    const root = /^(threePoint|risk)\b/.test(path) ? state : state.cost;
+    M.setByPath(root, path, value);
+    if (path === "allocationMethod" || path === "rolesUnit" || path === "threePoint.enabled") {
       renderCostPanel();
     } else {
       updateCostSubtotals();
@@ -546,14 +585,14 @@ var CSC = (window.CSC = window.CSC || {});
   function renderKPIs(marketRes, costRes) {
     if (mode() === "cost") {
       dom["kpi-grid"].innerHTML = [
-        kpiCard({ label: t("kpiSalePrice"), value: fmtUSD(costRes.salePrice), sub: t("kpiSaleSub"), primary: true }),
+        kpiCard({ label: t("kpiSalePrice"), value: fmtUSD(costRes.expected), sub: t("kpiSaleSub"), primary: true }),
         kpiCard({ label: t("kpiCostTotal"), value: fmtUSD(costRes.adjustedCost), sub: t("kpiCostSub") }),
         kpiCard({ label: t("kpiProfit"), value: fmtUSD(costRes.profit), sub: costRes.profitMargin + "%" }),
         kpiCard({ label: t("kpiVarFixed"), value: `${fmtUSD(costRes.variableTotal)} / ${fmtUSD(costRes.fixedAllocated)}`, small: true })
       ].join("");
     } else {
       dom["kpi-grid"].innerHTML = [
-        kpiCard({ label: t("kpiTotal"), value: fmtUSD(marketRes.total), sub: state.contract === "fixed" ? t("fixedContractSub") : t("hourlyContractSub"), primary: true }),
+        kpiCard({ label: t("kpiTotal"), value: fmtUSD(marketRes.expected), sub: state.contract === "fixed" ? t("fixedContractSub") : t("hourlyContractSub"), primary: true }),
         kpiCard({ label: t("kpiHours"), value: `${fmtNum(marketRes.totalHours)} ${t("unitHours")}`, sub: t("kpiHoursSub") }),
         kpiCard({ label: t("kpiRange"), value: `${fmtUSD(marketRes.rangeMin)} – ${fmtUSD(marketRes.rangeMax)}`, sub: t("kpiRangeSub"), small: true }),
         kpiCard({ label: t("kpiRate"), value: `${fmtUSD(marketRes.blendedRate)}${t("unitPerHour")}`, sub: t("kpiRateSub") })
@@ -620,12 +659,14 @@ var CSC = (window.CSC = window.CSC || {});
         [t("stepFixedAllocated"), fmtUSD(costRes.fixedAllocated)]
       ];
       if (costRes.costAdjTotal > 0.5) steps.push([t("stepCostAdj"), fmtUSD(costRes.costAdjTotal)]);
+      if (costRes.riskAmount > 0.5) steps.push([t("stepRisk"), fmtUSD(costRes.riskAmount) + " (" + costRes.riskPct + "%)"]);
       steps.push([t("stepCostTotal"), fmtUSD(costRes.adjustedCost)]);
       steps.push([t("stepProfit"), fmtUSD(costRes.profit) + " (" + costRes.profitMargin + "%)"]);
       if (costRes.priceAdjTotal > 0.5) steps.push([t("stepPriceAdj"), fmtUSD(costRes.priceAdjTotal)]);
+      const cTotalLabel = state.threePoint.enabled ? t("stepExpected") : t("stepSalePrice");
       dom["trace-body"].innerHTML =
         traceSteps(steps) +
-        `<div class="trace-step trace-step--total"><span class="trace-idx">Σ</span><span class="trace-label">${t("stepSalePrice")}</span><span class="trace-value">${fmtUSD(costRes.salePrice)}</span></div>`;
+        `<div class="trace-step trace-step--total"><span class="trace-idx">Σ</span><span class="trace-label">${cTotalLabel}</span><span class="trace-value">${fmtUSD(costRes.expected)}</span></div>`;
     } else {
       const steps = [
         [t("effortLabel"), t("effort" + cap(marketRes.effortMethod))],
@@ -639,9 +680,11 @@ var CSC = (window.CSC = window.CSC || {});
         [t("stepPost"), fmtUSD(marketRes.post)],
         [t("stepMargin"), fmtUSD(marketRes.margin)]
       ];
+      if (marketRes.riskAmount > 0.5) steps.push([t("stepRisk"), fmtUSD(marketRes.riskAmount) + " (" + marketRes.riskPct + "%)"]);
+      const mTotalLabel = state.threePoint.enabled ? t("stepExpected") : t("stepTotal");
       dom["trace-body"].innerHTML =
         traceSteps(steps) +
-        `<div class="trace-step trace-step--total"><span class="trace-idx">Σ</span><span class="trace-label">${t("stepTotal")}</span><span class="trace-value">${fmtUSD(marketRes.total)}</span></div>`;
+        `<div class="trace-step trace-step--total"><span class="trace-idx">Σ</span><span class="trace-label">${mTotalLabel}</span><span class="trace-value">${fmtUSD(marketRes.expected)}</span></div>`;
     }
   }
 
@@ -672,7 +715,7 @@ var CSC = (window.CSC = window.CSC || {});
 
   function recompute() {
     const marketRes = M.computeForRegion(state, params, state.region);
-    const costRes = M.computeCost(state);
+    const costRes = M.computeCost(state, params);
     renderKPIs(marketRes, costRes);
     renderBreakdown(marketRes, costRes);
     renderTrace(marketRes, costRes);
@@ -881,12 +924,13 @@ var CSC = (window.CSC = window.CSC || {});
   function exportCsv() {
     const rows = [];
     if (mode() === "cost") {
-      const c = M.computeCost(state);
+      const c = M.computeCost(state, params);
       rows.push(["Categoria", "Monto USD"]);
       rows.push([t("catPersonnel"), Math.round(c.personnel)]);
       rows.push([t("catVarProject"), Math.round(c.variableProject)]);
       rows.push([t("catFixed"), Math.round(c.fixedAllocated)]);
       if (c.costAdjTotal > 0.5) rows.push([t("catCostAdj"), Math.round(c.costAdjTotal)]);
+      if (c.riskAmount > 0.5) rows.push([t("stepRisk"), Math.round(c.riskAmount)]);
       rows.push([t("catCost"), Math.round(c.adjustedCost)]);
       rows.push([t("catProfit"), Math.round(c.profit)]);
       if (c.priceAdjTotal > 0.5) rows.push([t("catPriceAdj"), Math.round(c.priceAdjTotal)]);
@@ -895,7 +939,8 @@ var CSC = (window.CSC = window.CSC || {});
       const res = M.computeForRegion(state, params, state.region);
       rows.push(["Categoria", "Monto USD"]);
       marketCategories(res).forEach((c) => rows.push([t(c.key), Math.round(c.value)]));
-      rows.push([t("totalLabel"), Math.round(res.total)]);
+      if (res.riskAmount > 0.5) rows.push([t("stepRisk"), Math.round(res.riskAmount)]);
+      rows.push([t("totalLabel"), Math.round(res.expected)]);
       rows.push([t("kpiHours"), Math.round(res.totalHours)]);
       rows.push([t("kpiRate"), res.blendedRate.toFixed(2)]);
     }
@@ -907,8 +952,8 @@ var CSC = (window.CSC = window.CSC || {});
   let scenariosChart = null;
 
   function primaryFor(s) {
-    if ((s.state.mode || "market") === "cost") return M.computeCost(s.state).salePrice;
-    return M.computeForRegion(s.state, params, s.state.region).total;
+    if ((s.state.mode || "market") === "cost") return M.computeCost(s.state, params).expected;
+    return M.computeForRegion(s.state, params, s.state.region).expected;
   }
 
   function buildScenariosBody() {

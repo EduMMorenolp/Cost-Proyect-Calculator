@@ -5,6 +5,15 @@ con el título en negrita, una descripción que se entiende sin abrir el código
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-16
+
+- **Added**: **Estimación de 3 puntos (optimista / realista / pesimista)**. Opción para estimar con un rango, cálculo del valor esperado por PERT `(O + 4R + P) / 6` y rango mínimo-máximo, disponible en ambos modos. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js, index.html. [2026-10-16]
+- **Added**: **Buffer de riesgo por nivel**. Selector de riesgo (sin buffer / bajo / medio / alto) con porcentaje configurable desde Parámetros, aplicado al costo antes del margen. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js, index.html. [2026-10-16]
+- **Changed**: **KPIs y traza reflejan el total esperado**. El precio de venta y el costo total muestran el valor esperado (PERT o el total simple) y la traza incorpora el buffer de riesgo. [2026-10-16]
+  * **Files (Archivos)**: js/app.js. [2026-10-16]
+
 ## [1.3.0] - 2026-10-16
 
 - **Added**: **Método de estimación de esfuerzo configurable**. En el modo tarifas se puede elegir cómo se calculan las horas del proyecto: Clásico (complejidad), Arquetipo + funciones, COCOMO, Puntos de función, Puntos de historia u Horas manuales, con vista previa del esfuerzo resultante. [2026-10-16]

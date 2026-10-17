@@ -316,6 +316,20 @@ CSC.I18N = {
     hoursPerPersonMonth: "Horas por persona-mes",
     colHourly: "Costo/h",
 
+    /* Fase B — 3 puntos y riesgo */
+    secUncertainty: "Estimación de 3 Puntos y Riesgo",
+    tpEnable: "Rango con 3 puntos (optimista / realista / pesimista)",
+    tpOptimistic: "Optimista (−%)",
+    tpPessimistic: "Pesimista (+%)",
+    riskLabel: "Nivel de riesgo",
+    riskNone: "Sin buffer",
+    riskLow: "Bajo",
+    riskMedium: "Medio",
+    riskHigh: "Alto",
+    stepRisk: "Buffer de riesgo",
+    stepExpected: "Total esperado (PERT)",
+    kpiExpected: "Total esperado",
+
     /* Fase C — modelos paramétricos */
     cocomoKloc: "Tamaño (miles de líneas, KLOC)",
     cocomoModeLabel: "Modo del proyecto",
@@ -665,6 +679,20 @@ CSC.I18N = {
     hoursPerFP: "Hours per function point",
     hoursPerPersonMonth: "Hours per person-month",
     colHourly: "Cost/h",
+
+    /* Phase B — 3-point & risk */
+    secUncertainty: "3-Point Estimate & Risk",
+    tpEnable: "Range with 3 points (optimistic / realistic / pessimistic)",
+    tpOptimistic: "Optimistic (−%)",
+    tpPessimistic: "Pessimistic (+%)",
+    riskLabel: "Risk level",
+    riskNone: "No buffer",
+    riskLow: "Low",
+    riskMedium: "Medium",
+    riskHigh: "High",
+    stepRisk: "Risk buffer",
+    stepExpected: "Expected total (PERT)",
+    kpiExpected: "Expected total",
 
     /* Phase C — parametric models */
     cocomoKloc: "Size (thousands of lines, KLOC)",
