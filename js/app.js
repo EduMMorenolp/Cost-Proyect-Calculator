@@ -48,6 +48,8 @@ var CSC = (window.CSC = window.CSC || {});
       "market-panel", "cost-panel", "cost-body",
       "effort-method", "effort-body", "team-profile", "team-role", "market-team-body",
       "tp-enabled", "tp-opt", "tp-pess", "risk-level",
+      "engagement", "hours-per-month", "tco-maint", "tco-years", "tco-hosting", "tco-api",
+      "timeline-body", "tco-body",
       "chart1-title", "chart2-title", "chart3-title",
       "params-modal", "params-body", "params-reset", "params-export", "params-import", "params-close",
       "scenarios-modal", "scenarios-body", "scenarios-close",
@@ -303,6 +305,12 @@ var CSC = (window.CSC = window.CSC || {});
       dom["tp-pess"].disabled = !state.threePoint.enabled;
     }
     if (dom["risk-level"]) dom["risk-level"].value = state.risk.level || "none";
+    if (dom["engagement"]) dom["engagement"].value = state.engagement || "dedicated";
+    if (dom["hours-per-month"]) dom["hours-per-month"].value = state.timeline.hoursPerMonth;
+    if (dom["tco-maint"]) dom["tco-maint"].value = state.tco.maintenancePct;
+    if (dom["tco-years"]) dom["tco-years"].value = state.tco.years;
+    if (dom["tco-hosting"]) dom["tco-hosting"].value = state.tco.hostingMonthly;
+    if (dom["tco-api"]) dom["tco-api"].value = state.tco.apiMonthly;
     $$(".mode-btn").forEach((b) => {
       const active = b.dataset.mode === state.extrasMode;
       b.classList.toggle("is-active", active);
@@ -347,6 +355,12 @@ var CSC = (window.CSC = window.CSC || {});
       state.threePoint.pessimistic = Math.max(0, num(dom["tp-pess"].value));
     }
     if (dom["risk-level"]) state.risk.level = dom["risk-level"].value;
+    if (dom["engagement"]) state.engagement = dom["engagement"].value;
+    if (dom["hours-per-month"]) state.timeline.hoursPerMonth = Math.max(1, num(dom["hours-per-month"].value));
+    if (dom["tco-maint"]) state.tco.maintenancePct = Math.max(0, num(dom["tco-maint"].value));
+    if (dom["tco-years"]) state.tco.years = Math.max(1, num(dom["tco-years"].value));
+    if (dom["tco-hosting"]) state.tco.hostingMonthly = Math.max(0, num(dom["tco-hosting"].value));
+    if (dom["tco-api"]) state.tco.apiMonthly = Math.max(0, num(dom["tco-api"].value));
   }
 
   /* ---------------- Panel de costos ---------------- */
@@ -516,6 +530,32 @@ var CSC = (window.CSC = window.CSC || {});
             <option value="high" ${state.risk.level === "high" ? "selected" : ""}>${t("riskHigh")}</option>
           </select>
         </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title" data-i18n="secTimeline">${t("secTimeline")}</h2>
+        <div class="field">
+          <label class="field-label">${t("engagementLabel")}</label>
+          <select class="input" data-cost="engagement">
+            <option value="augmentation" ${state.engagement === "augmentation" ? "selected" : ""}>${t("engagementAugmentation")}</option>
+            <option value="dedicated" ${state.engagement === "dedicated" ? "selected" : ""}>${t("engagementDedicated")}</option>
+            <option value="outsourcing" ${state.engagement === "outsourcing" ? "selected" : ""}>${t("engagementOutsourcing")}</option>
+          </select>
+        </div>
+        <div class="mini-field" style="max-width:220px">
+          <label>${t("hoursPerMonthLabel")}</label>
+          <input class="input" type="number" min="1" data-cost="timeline.hoursPerMonth" value="${state.timeline.hoursPerMonth}">
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title" data-i18n="secTco">${t("secTco")}</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="mini-field"><label>${t("tcoMaintenance")}</label><input class="input" type="number" min="0" data-cost="tco.maintenancePct" value="${state.tco.maintenancePct}"></div>
+          <div class="mini-field"><label>${t("tcoYears")}</label><input class="input" type="number" min="1" data-cost="tco.years" value="${state.tco.years}"></div>
+          <div class="mini-field"><label>${t("tcoHosting")}</label><input class="input" type="number" min="0" data-cost="tco.hostingMonthly" value="${state.tco.hostingMonthly}"></div>
+          <div class="mini-field"><label>${t("tcoApi")}</label><input class="input" type="number" min="0" data-cost="tco.apiMonthly" value="${state.tco.apiMonthly}"></div>
+        </div>
       </section>`;
   }
 
@@ -536,7 +576,7 @@ var CSC = (window.CSC = window.CSC || {});
     if (target.type === "number") value = Math.max(0, num(target.value));
     else if (target.type === "checkbox") value = target.checked;
     else value = target.value;
-    const root = /^(threePoint|risk)\b/.test(path) ? state : state.cost;
+    const root = /^(threePoint|risk|engagement|timeline|tco)\b/.test(path) ? state : state.cost;
     M.setByPath(root, path, value);
     if (path === "allocationMethod" || path === "rolesUnit" || path === "threePoint.enabled") {
       renderCostPanel();
@@ -713,11 +753,49 @@ var CSC = (window.CSC = window.CSC || {});
     dom["chart3-title"].textContent = t(titles[2]);
   }
 
+  function renderTimeline(marketRes, costRes) {
+    const el = dom["timeline-body"];
+    if (!el) return;
+    if (mode() === "cost") {
+      const teamSize = costRes.roles.reduce((a, r) => a + (Number(r.qty) || 0) * ((Number(r.dedication) || 100) / 100), 0);
+      el.innerHTML = `<div class="breakdown-item breakdown-item--total"><span class="breakdown-label">${t("timelineMonths")}</span><span class="breakdown-value">${fmtNum(costRes.months)} ${t("timelineMonthsUnit")}</span></div>
+        <div class="breakdown-item"><span class="breakdown-label">${t("timelineTeam")}</span><span class="breakdown-value">${fmtNum(teamSize)}</span></div>`;
+      return;
+    }
+    const tl = M.computeTimeline(marketRes.totalHours, marketRes.totalDevs, state, params);
+    const pSum = M.sumPhase(state.phases) || 1;
+    let acc = 0;
+    const rows = PHASE_KEYS.map((k) => {
+      const share = (Number(state.phases[k]) || 0) / pSum;
+      const from = acc;
+      acc += share * tl.months;
+      return `<div class="breakdown-item"><span class="breakdown-label">${t("phase" + cap(k))}</span><span class="breakdown-value">${from.toFixed(1)} – ${acc.toFixed(1)} ${t("timelineMonthsUnit")}</span></div>`;
+    }).join("");
+    el.innerHTML = `<div class="breakdown-item breakdown-item--total"><span class="breakdown-label">${t("timelineMonths")}</span><span class="breakdown-value">${tl.months.toFixed(1)} ${t("timelineMonthsUnit")}</span></div>
+      <div class="breakdown-item"><span class="breakdown-label">${t("timelineTeam")}</span><span class="breakdown-value">${fmtNum(tl.teamSize)}</span></div>
+      ${rows}`;
+  }
+
+  function renderTco(expected) {
+    const el = dom["tco-body"];
+    if (!el) return;
+    const tco = M.computeTco(expected, state);
+    el.innerHTML = [
+      `<div class="breakdown-item"><span class="breakdown-label">${t("kpiTotal")}</span><span class="breakdown-value">${fmtUSD(tco.devCost)}</span></div>`,
+      `<div class="breakdown-item"><span class="breakdown-label">${t("tcoMaintenanceLabel")}</span><span class="breakdown-value">${fmtUSD(tco.maintenance)}</span></div>`,
+      `<div class="breakdown-item"><span class="breakdown-label">${t("tcoInfraLabel")}</span><span class="breakdown-value">${fmtUSD(tco.infra)}</span></div>`,
+      `<div class="breakdown-item breakdown-item--total"><span class="breakdown-label">${t("tcoAnnualLabel")}</span><span class="breakdown-value">${fmtUSD(tco.annual)}</span></div>`,
+      `<div class="breakdown-item breakdown-item--total"><span class="breakdown-label">${t("tcoTotalLabel")} ${tco.years} ${t("tcoYearsSuffix")}</span><span class="breakdown-value">${fmtUSD(tco.total)}</span></div>`
+    ].join("");
+  }
+
   function recompute() {
     const marketRes = M.computeForRegion(state, params, state.region);
     const costRes = M.computeCost(state, params);
     renderKPIs(marketRes, costRes);
     renderBreakdown(marketRes, costRes);
+    renderTimeline(marketRes, costRes);
+    renderTco(mode() === "cost" ? costRes.expected : marketRes.expected);
     renderTrace(marketRes, costRes);
     renderWarnings();
     updateChartTitles();

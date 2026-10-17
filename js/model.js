@@ -84,7 +84,11 @@ var CSC = (window.CSC = window.CSC || {});
     hoursPerPersonMonth: 160,
     hoursPerFP: 8,
     hoursPerSprint: 320,
-    fpWeights: { ei: 4, eo: 5, eq: 4, ilf: 10, eif: 7 }
+    fpWeights: { ei: 4, eo: 5, eq: 4, ilf: 10, eif: 7 },
+
+    // Cronograma y engagement [Fase D]
+    hoursPerMonth: 160,
+    engagementOverhead: { augmentation: 0, dedicated: 0, outsourcing: 0 }
   };
 
   /* ---------------- Estado por defecto ---------------- */
@@ -147,6 +151,11 @@ var CSC = (window.CSC = window.CSC || {});
     // Incertidumbre [Fase B]
     threePoint: { enabled: false, optimistic: 10, pessimistic: 30 },
     risk: { level: "none" }, // none | low | medium | high
+
+    // Cronograma, TCO y engagement [Fase D]
+    engagement: "dedicated", // augmentation | dedicated | outsourcing
+    timeline: { hoursPerMonth: 160 },
+    tco: { maintenancePct: 18, years: 3, hostingMonthly: 0, apiMonthly: 0 },
 
     /* ---- Modo costos (costo + margen) ---- */
     mode: "cost", // "market" | "cost"  (default: costos)
@@ -305,9 +314,16 @@ var CSC = (window.CSC = window.CSC || {});
     return num(buffers[level], num(buffers.none, 0));
   }
 
+  function overheadPct(state, params) {
+    const eng = state.engagement || "dedicated";
+    const map = (params && params.engagementOverhead) || {};
+    return num(map[eng], 0);
+  }
+
   function applyUncertainty(baseTotal, state, params) {
     const riskPct = riskPctFor(state, params);
-    const withRisk = baseTotal * (1 + riskPct / 100);
+    const oh = overheadPct(state, params);
+    const withRisk = baseTotal * (1 + riskPct / 100) * (1 + oh / 100);
     const tp = state.threePoint || {};
     let expected = withRisk;
     let rangeMin = withRisk;
@@ -323,7 +339,24 @@ var CSC = (window.CSC = window.CSC || {});
       rangeMin = withRisk * (1 - bp / 100);
       rangeMax = withRisk * (1 + bp / 100);
     }
-    return { riskPct: riskPct, riskAmount: withRisk - baseTotal, withRisk: withRisk, expected: expected, rangeMin: rangeMin, rangeMax: rangeMax };
+    return { riskPct: riskPct, overheadPct: oh, riskAmount: withRisk - baseTotal, withRisk: withRisk, expected: expected, rangeMin: rangeMin, rangeMax: rangeMax };
+  }
+
+  /* ---------------- Cronograma y TCO [Fase D] ---------------- */
+  function computeTimeline(totalHours, teamSize, state, params) {
+    const hpm = num((state.timeline && state.timeline.hoursPerMonth), num(params.hoursPerMonth, 160)) || 160;
+    const size = Math.max(1, num(teamSize) || 1);
+    const months = totalHours / (size * hpm);
+    return { months: months, teamSize: size, hoursPerMonth: hpm };
+  }
+
+  function computeTco(devCost, state) {
+    const t = state.tco || {};
+    const maintenance = (devCost * num(t.maintenancePct)) / 100;
+    const infra = (num(t.hostingMonthly) + num(t.apiMonthly)) * 12;
+    const annual = maintenance + infra;
+    const years = num(t.years);
+    return { devCost: devCost, maintenance: maintenance, infra: infra, annual: annual, years: years, total: devCost + annual * years };
   }
 
   function blendedRateFor(state, params, region) {    if (state.teamMode === "role") {
@@ -461,9 +494,11 @@ var CSC = (window.CSC = window.CSC || {});
     const costAdjTotal = adjustments
       .filter((a) => a.appliesTo === "cost")
       .reduce((acc, a) => acc + (a.type === "amount" ? Number(a.value) || 0 : (totalCost * (Number(a.value) || 0)) / 100), 0);
+    const oh = overheadPct(state, params);
+    const costWithOverhead = totalCost * (1 + oh / 100);
     const riskPct = riskPctFor(state, params);
-    const riskAmount = (totalCost * riskPct) / 100;
-    const adjustedCost = totalCost + costAdjTotal + riskAmount;
+    const riskAmount = (costWithOverhead * riskPct) / 100;
+    const adjustedCost = costWithOverhead + costAdjTotal + riskAmount;
 
     const profitMargin = Number(c.profitMargin) || 0;
     const profit = (adjustedCost * profitMargin) / 100;
@@ -497,6 +532,7 @@ var CSC = (window.CSC = window.CSC || {});
       fixedAllocated: fixedAllocated,
       totalCost: totalCost,
       costAdjTotal: costAdjTotal,
+      overheadPct: oh,
       riskPct: riskPct,
       riskAmount: riskAmount,
       adjustedCost: adjustedCost,
@@ -551,6 +587,8 @@ var CSC = (window.CSC = window.CSC || {});
     computeEffort: computeEffort,
     computeForRegion: computeForRegion,
     computeCost: computeCost,
+    computeTimeline: computeTimeline,
+    computeTco: computeTco,
     sumPhase: sumPhase
   };
 })();

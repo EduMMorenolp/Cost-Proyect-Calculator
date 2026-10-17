@@ -5,6 +5,15 @@ con el título en negrita, una descripción que se entiende sin abrir el código
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-16
+
+- **Added**: **Cronograma estimado**. Duración del proyecto calculada a partir del esfuerzo y el tamaño del equipo (con horas por persona-mes configurables), con hitos acumulados por fase en el modo tarifas y duración por meses en el modo costos. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js, index.html. [2026-10-16]
+- **Added**: **Costo Total de Propiedad (TCO)**. Mantenimiento anual (%), años, hosting y APIs de terceros mensuales que producen el costo operativo anual y el costo total a N años, con tarjeta propia en el dashboard. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js, index.html. [2026-10-16]
+- **Added**: **Modalidad de contratación (engagement)**. Staff augmentation, equipo dedicado u outsourcing, con porcentaje de overhead configurable desde los parámetros del modelo. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js, index.html. [2026-10-16]
+
 ## [1.4.0] - 2026-10-16
 
 - **Added**: **Estimación de 3 puntos (optimista / realista / pesimista)**. Opción para estimar con un rango, cálculo del valor esperado por PERT `(O + 4R + P) / 6` y rango mínimo-máximo, disponible en ambos modos. [2026-10-16]

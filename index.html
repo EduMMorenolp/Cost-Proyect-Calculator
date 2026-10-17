@@ -234,6 +234,32 @@
               </select>
             </div>
           </section>
+
+          <section class="card">
+            <h2 class="card-title" data-i18n="secTimeline">Cronograma y Engagement</h2>
+            <div class="field">
+              <label class="field-label" for="engagement" data-i18n="engagementLabel">Modalidad de contratación</label>
+              <select id="engagement" class="input">
+                <option value="augmentation" data-i18n="engagementAugmentation">Staff augmentation</option>
+                <option value="dedicated" data-i18n="engagementDedicated">Equipo dedicado</option>
+                <option value="outsourcing" data-i18n="engagementOutsourcing">Outsourcing</option>
+              </select>
+            </div>
+            <div class="mini-field" style="max-width:220px">
+              <label for="hours-per-month" data-i18n="hoursPerMonthLabel">Horas por persona-mes</label>
+              <input id="hours-per-month" class="input" type="number" min="1" value="160" />
+            </div>
+          </section>
+
+          <section class="card">
+            <h2 class="card-title" data-i18n="secTco">Costo Total de Propiedad (TCO)</h2>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="mini-field"><label for="tco-maint" data-i18n="tcoMaintenance">Mantenimiento anual (%)</label><input id="tco-maint" class="input" type="number" min="0" value="18" /></div>
+              <div class="mini-field"><label for="tco-years" data-i18n="tcoYears">Años</label><input id="tco-years" class="input" type="number" min="1" value="3" /></div>
+              <div class="mini-field"><label for="tco-hosting" data-i18n="tcoHosting">Hosting mensual (USD)</label><input id="tco-hosting" class="input" type="number" min="0" value="0" /></div>
+              <div class="mini-field"><label for="tco-api" data-i18n="tcoApi">APIs de terceros mensual (USD)</label><input id="tco-api" class="input" type="number" min="0" value="0" /></div>
+            </div>
+          </section>
         </div>
 
         <!-- ===== PANEL: MODO COSTOS (inyectado por JS) ===== -->
@@ -272,6 +298,16 @@
         <div class="card">
           <h3 class="chart-title" data-i18n="numericBreakdown">Desglose numérico</h3>
           <div id="numeric-breakdown" class="breakdown-list"></div>
+        </div>
+
+        <div class="card">
+          <h3 class="chart-title" data-i18n="dashTimeline">Cronograma Estimado</h3>
+          <div id="timeline-body"></div>
+        </div>
+
+        <div class="card">
+          <h3 class="chart-title" data-i18n="dashTco">Costo Total de Propiedad</h3>
+          <div id="tco-body" class="breakdown-list"></div>
         </div>
 
         <details class="card trace-card" open>
