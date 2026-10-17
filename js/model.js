@@ -183,7 +183,10 @@ var CSC = (window.CSC = window.CSC || {});
       allocationProjects: 1,
       profitMargin: 25,
       adjustments: []
-    }
+    },
+
+    /* ---- Bloques del formulario [Fase F] ---- */
+    ui: { blocks: {} } // id -> "visible" | "hidden" | "removed" (sin entrada = visible)
   };
 
   const STORAGE = {
@@ -298,6 +301,15 @@ var CSC = (window.CSC = window.CSC || {});
   /* ---------------- Lógica de cálculo (modo tarifas) ---------------- */
   const sumPhase = (phases) => Object.values(phases).reduce((a, b) => a + (Number(b) || 0), 0);
 
+  /* ---------------- Bloque del formulario (visible/hidden/removed) [Fase F] ---------------- */
+  const BLOCK_STATES = ["visible", "hidden", "removed"];
+  function blockMode(state, id) {
+    const v = state && state.ui && state.ui.blocks ? state.ui.blocks[id] : null;
+    return v === "hidden" || v === "removed" ? v : "visible";
+  }
+  // Un bloque "removed" no aporta al cálculo; "hidden" sigue contando.
+  function blockOff(state, id) { return blockMode(state, id) === "removed"; }
+
   function groupAmount(group, mode, base) {
     let total = 0;
     Object.values(group).forEach((it) => {
@@ -398,7 +410,7 @@ var CSC = (window.CSC = window.CSC || {});
     const baseHours = effort.hours;
     const totalHours = baseHours * teamFactor;
 
-    const soCount = state.platforms.length;
+    const soCount = blockOff(state, "platforms") ? 1 : state.platforms.length;
     const soMult = 1 + Math.min(Math.max(soCount - 1, 0) * (params.soStep / 100), params.soCap / 100);
 
     const devBaseCost = totalHours * blendedRate;
@@ -408,8 +420,8 @@ var CSC = (window.CSC = window.CSC || {});
     const share = (k) => (pSum > 0 ? (Number(state.phases[k]) || 0) / pSum : 0);
     const phaseAmount = (k) => devWithSO * share(k);
 
-    const extras = groupAmount(state.extras, state.extrasMode, devWithSO);
-    const post = groupAmount(state.post, state.extrasMode, devWithSO);
+    const extras = blockOff(state, "extras") ? 0 : groupAmount(state.extras, state.extrasMode, devWithSO);
+    const post = blockOff(state, "post") ? 0 : groupAmount(state.post, state.extrasMode, devWithSO);
 
     const marginBase = params.marginAppliesToAll ? devWithSO + extras + post : devWithSO + extras;
     const marginAlways = marginBase * (params.fixedMargin / 100);
@@ -461,7 +473,7 @@ var CSC = (window.CSC = window.CSC || {});
     const c = state.cost || {};
     const rolesUnit = c.rolesUnit === "hours" ? "hours" : "months";
 
-    const roles = (c.roles || []).map((r) => {
+    const roles = (blockOff(state, "roles") ? [] : (c.roles || [])).map((r) => {
       const qty = num(r.qty);
       const rate = num(r.monthly);           // costo mensual o costo por hora según rolesUnit
       const amount = num(r.months);          // meses u horas según rolesUnit
@@ -474,10 +486,10 @@ var CSC = (window.CSC = window.CSC || {});
       };
     });
     const personnel = roles.reduce((a, r) => a + r.subtotal, 0);
-    const variableProject = (c.variableCosts || []).reduce((a, v) => a + (Number(v.amount) || 0), 0);
+    const variableProject = blockOff(state, "variableProject") ? 0 : (c.variableCosts || []).reduce((a, v) => a + (Number(v.amount) || 0), 0);
     const variableTotal = personnel + variableProject;
 
-    const fixedMonthly = (c.fixedCosts || []).reduce((a, f) => a + (Number(f.monthly) || 0), 0);
+    const fixedMonthly = blockOff(state, "fixedCosts") ? 0 : (c.fixedCosts || []).reduce((a, f) => a + (Number(f.monthly) || 0), 0);
     const months = Number(c.months) || 0;
     let fixedAllocated;
     if (c.allocationMethod === "dedication") {
@@ -489,7 +501,7 @@ var CSC = (window.CSC = window.CSC || {});
     }
 
     const totalCost = variableTotal + fixedAllocated;
-    const adjustments = c.adjustments || [];
+    const adjustments = blockOff(state, "adjustments") ? [] : (c.adjustments || []);
 
     const costAdjTotal = adjustments
       .filter((a) => a.appliesTo === "cost")
@@ -500,7 +512,7 @@ var CSC = (window.CSC = window.CSC || {});
     const riskAmount = (costWithOverhead * riskPct) / 100;
     const adjustedCost = costWithOverhead + costAdjTotal + riskAmount;
 
-    const profitMargin = Number(c.profitMargin) || 0;
+    const profitMargin = blockOff(state, "margin") ? 0 : Number(c.profitMargin) || 0;
     const profit = (adjustedCost * profitMargin) / 100;
     const basePrice = adjustedCost + profit;
 
@@ -589,6 +601,9 @@ var CSC = (window.CSC = window.CSC || {});
     computeCost: computeCost,
     computeTimeline: computeTimeline,
     computeTco: computeTco,
-    sumPhase: sumPhase
+    sumPhase: sumPhase,
+    blockMode: blockMode,
+    blockOff: blockOff,
+    BLOCK_STATES: BLOCK_STATES,
   };
 })();

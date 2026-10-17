@@ -185,6 +185,14 @@ input[type="range"].range:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
 .delta-up { color: #b91c1c; font-weight: 700; }
 .delta-down { color: #15803d; font-weight: 700; }
 
+/* ---------------- Bloques del formulario [Fase F] ---------------- */
+.block-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.block-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; padding: 0.55rem 0.7rem; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
+.block-row-main { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.block-row-name { font-size: 0.85rem; font-weight: 600; color: #334155; }
+.block-row-type { font-size: 0.68rem; color: #64748b; }
+.block-row-type.is-amount { color: #b45309; }
+
 /* ---------------- Desglose numérico ---------------- */
 .breakdown-list { display: flex; flex-direction: column; gap: 0.45rem; }
 .breakdown-item { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.5rem 0.7rem; border-radius: 10px; background: #f8fafc; font-size: 0.83rem; }

@@ -11,6 +11,7 @@ CSC.I18N = {
 
     /* Toolbar */
     btnParams: "Parámetros",
+    btnBlocks: "Bloques",
     btnScenarios: "Escenarios",
     btnPrint: "Imprimir / PDF",
     btnCsv: "Exportar CSV",
@@ -396,6 +397,15 @@ CSC.I18N = {
     xlsxAssumptions: "Supuestos",
     xlsxCategory: "Categoría",
     xlsxAmount: "Monto (USD)",
+    /* Fase F — bloques del formulario */
+    blocksTitle: "Bloques del formulario",
+    blocksHint: "Mostrá, ocultá o quitá bloques. Ocultar no cambia el cálculo; quitar lo excluye del resultado.",
+    blockStateVisible: "Visible",
+    blockStateHidden: "Oculto",
+    blockStateRemoved: "Quitar",
+    blockTypeAmount: "Afecta el resultado",
+    blockTypeConfig: "Configuración (solo ocultar)",
+    blocksRemovedWarn: "Bloques excluidos del cálculo",
 
     /* Fase C — modelos paramétricos */
     cocomoKloc: "Tamaño (miles de líneas, KLOC)",
@@ -456,6 +466,7 @@ CSC.I18N = {
     langLabel: "Language",
 
     btnParams: "Parameters",
+    btnBlocks: "Blocks",
     btnScenarios: "Scenarios",
     btnPrint: "Print / PDF",
     btnCsv: "Export CSV",
@@ -827,6 +838,15 @@ CSC.I18N = {
     xlsxAssumptions: "Assumptions",
     xlsxCategory: "Category",
     xlsxAmount: "Amount (USD)",
+    /* Phase F — form blocks */
+    blocksTitle: "Form blocks",
+    blocksHint: "Show, hide or remove blocks. Hiding does not change the calculation; removing excludes it.",
+    blockStateVisible: "Visible",
+    blockStateHidden: "Hidden",
+    blockStateRemoved: "Remove",
+    blockTypeAmount: "Affects the result",
+    blockTypeConfig: "Configuration (hide only)",
+    blocksRemovedWarn: "Blocks excluded from the calculation",
 
     /* Phase C — parametric models */
     cocomoKloc: "Size (thousands of lines, KLOC)",

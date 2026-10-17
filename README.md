@@ -127,6 +127,21 @@ editable y ampliable.
 - **Compartir:** copia una URL con el estado y los parámetros; al abrirla se restaura esa config.
 - **Idioma:** selector ES/EN que re-traduce toda la interfaz.
 
+## Bloques del formulario
+
+Desde el botón **Bloques** se abre un modal central para gestionar las secciones del formulario del
+modo activo. Cada bloque puede quedar en uno de tres estados:
+
+- **Visible:** se muestra y cuenta normalmente (valor por defecto).
+- **Oculto:** se esconde la sección, pero sus valores **siguen contando** en el cálculo.
+- **Quitar:** solo disponible en bloques de monto; la sección se excluye por completo del resultado
+  (por ejemplo, sin *Roles* el personal deja de sumar). Los bloques de configuración solo pueden
+  ocultarse.
+
+Al quitar bloques, el panel muestra un aviso con los nombres excluidos y la exportación a Excel deja
+de generar las hojas correspondientes. El estado de los bloques se guarda junto con el resto de la
+configuración.
+
 ## Ejemplo de referencia
 
 Con el **modo costos** precargado (2 desarrolladores de $2.500/mes, 1 analista de $3.000/mes,

@@ -5,6 +5,15 @@ con el título en negrita, una descripción que se entiende sin abrir el código
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-16
+
+- **Added**: **Bloques configurables del formulario**. Nuevo botón "Bloques" con un modal central para mostrar, ocultar o quitar secciones del formulario según el modo activo. Ocultar solo esconde la sección (el cálculo no cambia); quitar una sección de monto la excluye del resultado (por ejemplo, sin roles el personal deja de sumar). Los bloques de configuración solo pueden ocultarse. Cuando hay bloques quitados, el panel muestra un aviso con los nombres afectados. [2026-10-16]
+  * **Files (Archivos)**: js/model.js, js/app.js, js/i18n.js, index.html, styles.css. [2026-10-16]
+- **Changed**: **La exportación a Excel respeta los bloques quitados**. Las hojas de Roles, Costos Variables y Costos Fijos ya no se generan cuando esos bloques fueron quitados, y el Desglose refleja solo lo que efectivamente cuenta. [2026-10-16]
+  * **Files (Archivos)**: js/app.js. [2026-10-16]
+- **Changed**: **Margen separado de la asignación de costos fijos**. El porcentaje de margen de ganancia pasa a ser su propia tarjeta para poder tratarlo como bloque independiente. [2026-10-16]
+  * **Files (Archivos)**: js/app.js. [2026-10-16]
+
 ## [1.6.0] - 2026-10-16
 
 - **Added**: **Exportación a Excel con diseño**. Botón "Exportar Excel" que genera un libro `.xlsx` con varias hojas (Resumen, Desglose, Fases o Roles, Equipo, Escenarios, Supuestos), encabezados con estilo, formato de moneda y los gráficos del dashboard embebidos como imágenes en la hoja Resumen. Si la librería no carga, cae automáticamente al CSV. El CSV además ahora incluye título y fecha y deja los montos como números. [2026-10-16]

@@ -36,6 +36,34 @@ var CSC = (window.CSC = window.CSC || {});
   ];
   const MARKET_ROLE_LEVELS = ["junior", "mid", "senior"];
 
+  // Registro de bloques del formulario [Fase F]. type "amount" permite quitar (afecta el cálculo).
+  const BLOCKS = {
+    cost: [
+      { id: "costDuration", label: "secCostDuration", type: "config" },
+      { id: "roles", label: "secRoles", type: "amount" },
+      { id: "variableProject", label: "secVariableProject", type: "amount" },
+      { id: "fixedCosts", label: "secFixed", type: "amount" },
+      { id: "allocation", label: "allocationTitle", type: "config" },
+      { id: "margin", label: "profitMargin", type: "amount" },
+      { id: "adjustments", label: "secAdjust", type: "amount" },
+      { id: "uncertainty", label: "secUncertainty", type: "config" },
+      { id: "timeline", label: "secTimeline", type: "config" },
+      { id: "tco", label: "secTco", type: "config" }
+    ],
+    market: [
+      { id: "effort", label: "secEffort", type: "config" },
+      { id: "team", label: "secTeam", type: "config" },
+      { id: "platforms", label: "secPlatforms", type: "amount" },
+      { id: "extras", label: "secExtras", type: "amount" },
+      { id: "phases", label: "secPhases", type: "config" },
+      { id: "post", label: "secPost", type: "amount" },
+      { id: "contract", label: "secContract", type: "config" },
+      { id: "uncertainty", label: "secUncertainty", type: "config" },
+      { id: "timeline", label: "secTimeline", type: "config" },
+      { id: "tco", label: "secTco", type: "config" }
+    ]
+  };
+
   const mode = () => (state.mode === "cost" ? "cost" : "market");
 
   /* ---------------- DOM refs ---------------- */
@@ -52,6 +80,7 @@ var CSC = (window.CSC = window.CSC || {});
       "timeline-body", "tco-body",
       "chart1-title", "chart2-title", "chart3-title", "chart-prev", "chart-next", "chart-dots",
       "params-modal", "params-body", "params-reset", "params-export", "params-import", "params-close",
+      "blocks-modal", "blocks-body", "blocks-close", "btn-blocks",
       "scenarios-modal", "scenarios-body", "scenarios-close", "scenarios-print",
       "btn-params", "btn-scenarios", "btn-print", "btn-csv", "btn-excel", "btn-report", "btn-share"
     ].forEach((id) => { dom[id] = document.getElementById(id); });
@@ -432,7 +461,7 @@ var CSC = (window.CSC = window.CSC || {});
       : "";
 
     dom["cost-body"].innerHTML = `
-      <section class="card">
+      <section class="card" data-block="costDuration">
         <h2 class="card-title" data-i18n="secCostDuration">${t("secCostDuration")}</h2>
         <div class="param-field" style="max-width:220px">
           <label>${t("monthsLabel")}</label>
@@ -440,7 +469,7 @@ var CSC = (window.CSC = window.CSC || {});
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" data-block="roles">
         <div class="card-head">
           <h2 class="card-title card-title--flush" data-i18n="secRoles">${t("secRoles")}</h2>
           <select class="input input--sm" data-cost="rolesUnit" aria-label="${t("rolesUnitLabel")}" style="width:auto">
@@ -460,7 +489,7 @@ var CSC = (window.CSC = window.CSC || {});
         ${addButtonsRow("roles")}
       </section>
 
-      <section class="card">
+      <section class="card" data-block="variableProject">
         <h2 class="card-title" data-i18n="secVariableProject">${t("secVariableProject")}</h2>
         <div class="table-scroll">
           <table class="param-table cost-table">
@@ -471,7 +500,7 @@ var CSC = (window.CSC = window.CSC || {});
         ${addButtonsRow("variable")}
       </section>
 
-      <section class="card">
+      <section class="card" data-block="fixedCosts">
         <h2 class="card-title" data-i18n="secFixed">${t("secFixed")}</h2>
         <div class="table-scroll">
           <table class="param-table cost-table">
@@ -483,7 +512,7 @@ var CSC = (window.CSC = window.CSC || {});
         <p class="cost-total-line">${t("fixedMonthlyTotal")}: <strong id="fixed-monthly-total">${fmtUSD(cr.fixedMonthly)}</strong></p>
       </section>
 
-      <section class="card">
+      <section class="card" data-block="allocation">
         <h2 class="card-title" data-i18n="allocationTitle">${t("allocationTitle")}</h2>
         <div class="field" style="max-width:340px">
           <select class="input" data-cost="allocationMethod">
@@ -493,13 +522,16 @@ var CSC = (window.CSC = window.CSC || {});
           </select>
         </div>
         ${allocExtra}
-        <div class="param-field" style="max-width:220px;margin-top:0.75rem">
-          <label>${t("profitMargin")}</label>
+      </section>
+
+      <section class="card" data-block="margin">
+        <h2 class="card-title" data-i18n="profitMargin">${t("profitMargin")}</h2>
+        <div class="param-field" style="max-width:220px">
           <div class="param-input"><input class="input input--sm" type="number" min="0" data-cost="profitMargin" value="${c.profitMargin}"><span class="param-unit">%</span></div>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" data-block="adjustments">
         <h2 class="card-title" data-i18n="secAdjust">${t("secAdjust")}</h2>
         <p class="card-hint" data-i18n="adjHint">${t("adjHint")}</p>
         <div class="table-scroll">
@@ -511,7 +543,7 @@ var CSC = (window.CSC = window.CSC || {});
         ${addButtonsRow("adjust")}
       </section>
 
-      <section class="card">
+      <section class="card" data-block="uncertainty">
         <h2 class="card-title" data-i18n="secUncertainty">${t("secUncertainty")}</h2>
         <label class="option-row option-row--plain">
           <input type="checkbox" class="checkbox" data-cost="threePoint.enabled" ${state.threePoint.enabled ? "checked" : ""} />
@@ -532,7 +564,7 @@ var CSC = (window.CSC = window.CSC || {});
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" data-block="timeline">
         <h2 class="card-title" data-i18n="secTimeline">${t("secTimeline")}</h2>
         <div class="field">
           <label class="field-label">${t("engagementLabel")}</label>
@@ -548,7 +580,7 @@ var CSC = (window.CSC = window.CSC || {});
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" data-block="tco">
         <h2 class="card-title" data-i18n="secTco">${t("secTco")}</h2>
         <div class="grid grid-cols-2 gap-3">
           <div class="mini-field"><label>${t("tcoMaintenance")}</label><input class="input" type="number" min="0" data-cost="tco.maintenancePct" value="${state.tco.maintenancePct}"></div>
@@ -740,6 +772,10 @@ var CSC = (window.CSC = window.CSC || {});
       if (params.regions.some((r) => num(r.min) > num(r.max))) list.push(t("warnRange"));
       if (!num(M.computeEffort(state, params).hours)) list.push(t("warnNoHours"));
     }
+    const removedNames = (BLOCKS[mode()] || [])
+      .filter((b) => M.blockMode(state, b.id) === "removed")
+      .map((b) => t(b.label));
+    if (removedNames.length) list.push(t("blocksRemovedWarn") + ": " + removedNames.join(", "));
     dom.warnings.innerHTML = list.map((m) => `<span class="warning-chip">${m}</span>`).join("");
     dom.warnings.hidden = list.length === 0;
   }
@@ -761,6 +797,53 @@ var CSC = (window.CSC = window.CSC || {});
 
   function chartNav(delta) {
     if (delta > 0) CSC.Charts.next(); else CSC.Charts.prev();
+    recompute();
+  }
+
+  /* ---------------- Bloques del formulario [Fase F] ---------------- */
+  function applyBlockVisibility() {
+    $$("[data-block]").forEach((el) => {
+      el.hidden = M.blockMode(state, el.dataset.block) !== "visible";
+    });
+  }
+
+  function buildBlocksBody() {
+    const list = BLOCKS[mode()] || [];
+    const rows = list.map((b) => {
+      const cur = M.blockMode(state, b.id);
+      const opts = ["visible", "hidden"];
+      if (b.type === "amount") opts.push("removed");
+      const buttons = opts.map((st) =>
+        `<button type="button" class="mode-opt${cur === st ? " is-active" : ""}" data-block-id="${b.id}" data-block-state="${st}" aria-pressed="${cur === st}">${t("blockState" + cap(st))}</button>`
+      ).join("");
+      return `<div class="block-row">
+        <div class="block-row-main">
+          <span class="block-row-name">${esc(t(b.label))}</span>
+          <span class="block-row-type${b.type === "amount" ? " is-amount" : ""}">${t(b.type === "amount" ? "blockTypeAmount" : "blockTypeConfig")}</span>
+        </div>
+        <div class="mode-switch" role="group" aria-label="${esc(t(b.label))}">${buttons}</div>
+      </div>`;
+    }).join("");
+    return `<p class="card-hint">${t("blocksHint")}</p><div class="block-list">${rows}</div>`;
+  }
+
+  function rebuildBlocks() {
+    if (dom["blocks-body"]) dom["blocks-body"].innerHTML = buildBlocksBody();
+  }
+
+  function openBlocks(trigger) {
+    rebuildBlocks();
+    openModal(dom["blocks-modal"], trigger);
+  }
+
+  function setBlockState(id, value) {
+    if (!state.ui) state.ui = { blocks: {} };
+    if (!state.ui.blocks) state.ui.blocks = {};
+    if (value === "visible") delete state.ui.blocks[id];
+    else state.ui.blocks[id] = value;
+    persist();
+    applyBlockVisibility();
+    rebuildBlocks();
     recompute();
   }
 
@@ -824,6 +907,7 @@ var CSC = (window.CSC = window.CSC || {});
     renderTco(mode() === "cost" ? costRes.expected : marketRes.expected);
     renderTrace(marketRes, costRes);
     renderWarnings();
+    applyBlockVisibility();
     updatePhaseUI();
     const expected = mode() === "cost" ? costRes.expected : marketRes.expected;
     CSC.Charts.update({ mode: mode(), t: t, marketRes: marketRes, costRes: costRes, state: state, params: params, expected: expected });
@@ -1202,31 +1286,37 @@ var CSC = (window.CSC = window.CSC || {});
         });
       }
     } else {
-      const wr = wb.addWorksheet(t("xlsxRoles"), { views: [{ showGridLines: false }] });
-      wr.getColumn(1).width = 28; wr.getColumn(2).width = 10; wr.getColumn(3).width = 16; wr.getColumn(4).width = 12; wr.getColumn(5).width = 12; wr.getColumn(6).width = 18;
-      sheetTitle(wr, "A1:F1", t("xlsxRoles"));
-      headerRow(wr, 3, [t("colRole"), t("colQty"), t("colMonthly"), t("colMonths"), t("colDedication"), t("totalLabel")]);
-      let k = 4;
-      costRes.roles.forEach((role) => {
-        write(wr, k++, [{ v: role.role }, { v: role.qty }, { v: role.monthly, money: true }, { v: role.months }, { v: role.dedication + "%" }, { v: role.subtotal, money: true }]);
-      });
-      write(wr, k, [{ v: t("catPersonnel"), bold: true, fill: LIGHT }, { v: "" }, { v: "" }, { v: "" }, { v: "" }, { v: costRes.personnel, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+      if (!M.blockOff(state, "roles")) {
+        const wr = wb.addWorksheet(t("xlsxRoles"), { views: [{ showGridLines: false }] });
+        wr.getColumn(1).width = 28; wr.getColumn(2).width = 10; wr.getColumn(3).width = 16; wr.getColumn(4).width = 12; wr.getColumn(5).width = 12; wr.getColumn(6).width = 18;
+        sheetTitle(wr, "A1:F1", t("xlsxRoles"));
+        headerRow(wr, 3, [t("colRole"), t("colQty"), t("colMonthly"), t("colMonths"), t("colDedication"), t("totalLabel")]);
+        let k = 4;
+        costRes.roles.forEach((role) => {
+          write(wr, k++, [{ v: role.role }, { v: role.qty }, { v: role.monthly, money: true }, { v: role.months }, { v: role.dedication + "%" }, { v: role.subtotal, money: true }]);
+        });
+        write(wr, k, [{ v: t("catPersonnel"), bold: true, fill: LIGHT }, { v: "" }, { v: "" }, { v: "" }, { v: "" }, { v: costRes.personnel, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+      }
 
-      const wv = wb.addWorksheet(t("secVariableProject"), { views: [{ showGridLines: false }] });
-      wv.getColumn(1).width = 42; wv.getColumn(2).width = 18;
-      sheetTitle(wv, "A1:B1", t("secVariableProject"));
-      headerRow(wv, 3, [t("colConcept"), t("colAmount")]);
-      let vv = 4;
-      (state.cost.variableCosts || []).forEach((v) => write(wv, vv++, [{ v: v.concept }, { v: Number(v.amount) || 0, money: true }]));
-      write(wv, vv, [{ v: t("totalLabel"), bold: true, fill: LIGHT }, { v: costRes.variableProject, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+      if (!M.blockOff(state, "variableProject")) {
+        const wv = wb.addWorksheet(t("secVariableProject"), { views: [{ showGridLines: false }] });
+        wv.getColumn(1).width = 42; wv.getColumn(2).width = 18;
+        sheetTitle(wv, "A1:B1", t("secVariableProject"));
+        headerRow(wv, 3, [t("colConcept"), t("colAmount")]);
+        let vv = 4;
+        (state.cost.variableCosts || []).forEach((v) => write(wv, vv++, [{ v: v.concept }, { v: Number(v.amount) || 0, money: true }]));
+        write(wv, vv, [{ v: t("totalLabel"), bold: true, fill: LIGHT }, { v: costRes.variableProject, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+      }
 
-      const wf2 = wb.addWorksheet(t("secFixed"), { views: [{ showGridLines: false }] });
-      wf2.getColumn(1).width = 42; wf2.getColumn(2).width = 22;
-      sheetTitle(wf2, "A1:B1", t("secFixed"));
-      headerRow(wf2, 3, [t("colConcept"), t("colMonthlyFixed")]);
-      let ff = 4;
-      (state.cost.fixedCosts || []).forEach((fc) => write(wf2, ff++, [{ v: fc.concept }, { v: Number(fc.monthly) || 0, money: true }]));
-      write(wf2, ff, [{ v: t("fixedMonthlyTotal"), bold: true, fill: LIGHT }, { v: costRes.fixedMonthly, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+      if (!M.blockOff(state, "fixedCosts")) {
+        const wf2 = wb.addWorksheet(t("secFixed"), { views: [{ showGridLines: false }] });
+        wf2.getColumn(1).width = 42; wf2.getColumn(2).width = 22;
+        sheetTitle(wf2, "A1:B1", t("secFixed"));
+        headerRow(wf2, 3, [t("colConcept"), t("colMonthlyFixed")]);
+        let ff = 4;
+        (state.cost.fixedCosts || []).forEach((fc) => write(wf2, ff++, [{ v: fc.concept }, { v: Number(fc.monthly) || 0, money: true }]));
+        write(wf2, ff, [{ v: t("fixedMonthlyTotal"), bold: true, fill: LIGHT }, { v: costRes.fixedMonthly, money: true, bold: true, color: NAVY, fill: LIGHT }]);
+      }
     }
 
     /* ---- Escenarios ---- */
@@ -1264,8 +1354,8 @@ var CSC = (window.CSC = window.CSC || {});
       assumption(t("fixedMargin"), params.fixedMargin + "%");
       assumption(t("budgetRangePct"), "±" + params.budgetRangePct + "%");
     } else {
-      assumption(t("profitMargin"), (state.cost.profitMargin || 0) + "%");
-      assumption(t("rolesUnitLabel"), t("rolesUnit" + cap(state.cost.rolesUnit)));
+      if (!M.blockOff(state, "margin")) assumption(t("profitMargin"), (state.cost.profitMargin || 0) + "%");
+      if (!M.blockOff(state, "roles")) assumption(t("rolesUnitLabel"), t("rolesUnit" + cap(state.cost.rolesUnit)));
     }
     assumption(t("riskLabel"), t("risk" + cap(state.risk.level)));
     assumption(t("engagementLabel"), t("engagement" + cap(state.engagement)));
@@ -1588,6 +1678,7 @@ var CSC = (window.CSC = window.CSC || {});
     dom.lang.addEventListener("change", () => setLanguage(dom.lang.value));
 
     dom["btn-params"].addEventListener("click", (e) => openParams(e.currentTarget));
+    dom["btn-blocks"].addEventListener("click", (e) => openBlocks(e.currentTarget));
     dom["btn-scenarios"].addEventListener("click", (e) => openScenarios(e.currentTarget));
     dom["btn-print"].addEventListener("click", () => window.print());
     dom["btn-csv"].addEventListener("click", exportCsv);
@@ -1614,6 +1705,13 @@ var CSC = (window.CSC = window.CSC || {});
       e.target.value = "";
     });
     dom["params-close"].addEventListener("click", () => closeModal(dom["params-modal"]));
+
+    dom["blocks-close"].addEventListener("click", () => closeModal(dom["blocks-modal"]));
+    dom["blocks-body"].addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-block-id]");
+      if (!btn) return;
+      setBlockState(btn.dataset.blockId, btn.dataset.blockState);
+    });
 
     dom["scenarios-body"].addEventListener("click", (e) => {
       const save = e.target.closest("#scenario-save");

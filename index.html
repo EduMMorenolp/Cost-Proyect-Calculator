@@ -72,6 +72,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         <span data-i18n="btnParams">Parámetros</span>
       </button>
+      <button id="btn-blocks" class="btn btn--tool" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+        <span data-i18n="btnBlocks">Bloques</span>
+      </button>
       <button id="btn-scenarios" class="btn btn--tool" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"></path><rect x="7" y="10" width="3" height="7"></rect><rect x="12" y="6" width="3" height="11"></rect><rect x="17" y="13" width="3" height="4"></rect></svg>
         <span data-i18n="btnScenarios">Escenarios</span>
@@ -121,7 +125,7 @@
         <div id="market-panel" class="space-y-5" hidden>
 
           <!-- Estimación de esfuerzo [Fase A/C] -->
-          <section class="card">
+          <section class="card" data-block="effort">
             <h2 class="card-title" data-i18n="secEffort">Estimación de Esfuerzo</h2>
             <div class="field">
               <label class="field-label" for="effort-method" data-i18n="effortLabel">Método de estimación</label>
@@ -132,7 +136,7 @@
           </section>
 
           <!-- Equipo [Fase A] -->
-          <section class="card">
+          <section class="card" data-block="team">
             <h2 class="card-title" data-i18n="secTeam">Equipo y Experiencia</h2>
             <div class="field">
               <label class="field-label" for="region" data-i18n="region">Ubicación geográfica del equipo</label>
@@ -165,7 +169,7 @@
             </div>
           </section>
 
-          <section class="card">
+          <section class="card" data-block="platforms">
             <h2 class="card-title" data-i18n="secPlatforms">Cobertura de Sistemas Operativos</h2>
             <p class="card-hint" data-i18n="platformsHint">Cada plataforma adicional suma un recargo.</p>
             <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -177,7 +181,7 @@
             </div>
           </section>
 
-          <section class="card">
+          <section class="card" data-block="extras">
             <div class="card-head">
               <h2 class="card-title card-title--flush" data-i18n="secExtras">Funciones Adicionales</h2>
               <div class="mode-switch" role="group" aria-label="Modo de costo">
@@ -194,7 +198,7 @@
             </div>
           </section>
 
-          <section class="card">
+          <section class="card" data-block="phases">
             <h2 class="card-title" data-i18n="secPhases">Distribución por Fases</h2>
             <p class="card-hint" data-i18n="phasesHint">Ajustá el esfuerzo (%) entre fases. Debe sumar 100%.</p>
             <div class="space-y-3">
@@ -206,7 +210,7 @@
             <div class="phase-total"><span data-i18n="phaseTotal">Total</span>: <strong id="phase-total-value">100%</strong><span id="phase-warning" class="phase-warning" data-i18n="phaseWarning">La suma no es 100%.</span></div>
           </section>
 
-          <section class="card">
+          <section class="card" data-block="post">
             <h2 class="card-title" data-i18n="secPost">Servicios Posteriores y Mantenimiento</h2>
             <div class="space-y-2">
               <div class="cost-row"><label class="option-row option-row--plain"><input type="checkbox" class="checkbox post" data-key="maintenance" checked /><span class="option-text" data-i18n="postMaintenance">Mantenimiento y Actualizaciones</span></label><div class="cost-input"><span class="cost-sign post-sign" data-key="maintenance">$</span><input type="number" min="0" step="1" class="post-cost" data-key="maintenance" value="8000" aria-label="Costo Mantenimiento" /></div></div>
@@ -215,7 +219,7 @@
             </div>
           </section>
 
-          <section class="card">
+          <section class="card" data-block="contract">
             <h2 class="card-title" data-i18n="secContract">Tipo de Contrato</h2>
             <div class="field">
               <select id="contract" class="input">
@@ -226,7 +230,7 @@
             <p class="footnote" data-i18n="footnote">Los valores son editables.</p>
           </section>
 
-          <section class="card">
+          <section class="card" data-block="uncertainty">
             <h2 class="card-title" data-i18n="secUncertainty">Estimación de 3 Puntos y Riesgo</h2>
             <label class="option-row option-row--plain">
               <input type="checkbox" id="tp-enabled" class="checkbox" />
@@ -247,7 +251,7 @@
             </div>
           </section>
 
-          <section class="card">
+          <section class="card" data-block="timeline">
             <h2 class="card-title" data-i18n="secTimeline">Cronograma y Engagement</h2>
             <div class="field">
               <label class="field-label" for="engagement" data-i18n="engagementLabel">Modalidad de contratación</label>
@@ -263,7 +267,7 @@
             </div>
           </section>
 
-          <section class="card">
+          <section class="card" data-block="tco">
             <h2 class="card-title" data-i18n="secTco">Costo Total de Propiedad (TCO)</h2>
             <div class="grid grid-cols-2 gap-3">
               <div class="mini-field"><label for="tco-maint" data-i18n="tcoMaintenance">Mantenimiento anual (%)</label><input id="tco-maint" class="input" type="number" min="0" value="18" /></div>
@@ -375,6 +379,20 @@
           <span data-i18n="scenariosPrint">Imprimir / PDF</span>
         </button>
         <button id="scenarios-close" class="btn btn--primary" type="button" data-i18n="close">Cerrar</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL BLOQUES (Fase F) ===================== -->
+  <div id="blocks-modal" class="modal-backdrop no-print" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="blocks-title">
+      <header class="modal-header">
+        <h2 id="blocks-title" data-i18n="blocksTitle">Bloques del formulario</h2>
+        <button class="modal-x" data-modal-close aria-label="Cerrar">&times;</button>
+      </header>
+      <div class="modal-body" id="blocks-body"></div>
+      <footer class="modal-footer">
+        <button id="blocks-close" class="btn btn--primary" type="button" data-i18n="close">Cerrar</button>
       </footer>
     </div>
   </div>
