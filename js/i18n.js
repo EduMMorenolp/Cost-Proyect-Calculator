@@ -457,7 +457,8 @@ CSC.I18N = {
     spHoursPerSprint: "Horas por sprint",
     spSprints: "Sprints estimados",
 
-    disclaimer: "Estimación referencial. Ajustá los supuestos según tu proyecto."
+    disclaimer: "Estimación referencial. Ajustá los supuestos según tu proyecto.",
+    createdBy: "Creado por"
   },
 
   en: {
@@ -898,6 +899,7 @@ CSC.I18N = {
     spHoursPerSprint: "Hours per sprint",
     spSprints: "Estimated sprints",
 
-    disclaimer: "Referential estimate. Adjust assumptions to your project."
+    disclaimer: "Referential estimate. Adjust assumptions to your project.",
+    createdBy: "Created by"
   }
 };

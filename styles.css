@@ -135,6 +135,18 @@ input[type="range"].range:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
 .phase-warning.is-visible { display: inline-block; }
 .footnote { margin-top: 0.85rem; font-size: 0.72rem; color: #94a3b8; line-height: 1.4; }
 
+/* ---------------- Pie de página ---------------- */
+.app-footer {
+  padding: 0 1rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+.app-footer p { margin: 0; }
+.app-footer a { color: var(--brand-700); font-weight: 600; text-decoration: none; }
+.app-footer a:hover { text-decoration: underline; }
+.app-footer a:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 3px; border-radius: 2px; }
+
 /* ---------------- Warnings ---------------- */
 .warnings { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .warning-chip {
@@ -338,4 +350,5 @@ input[type="range"].range:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
   .grid.lg\:grid-cols-12 { display: block; }
   .chart-box { height: 240px; }
   .disclaimer { margin-top: 0.5rem; }
+  .app-footer { padding-bottom: 0; }
 }
